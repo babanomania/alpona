@@ -1,0 +1,64 @@
+{
+  "name": "Carrier performance",
+  "prompt": "Carrier performance: late delivery rate by carrier, monthly delay trends, and the regions hit worst",
+  "spec": {
+    "specVersion": 1,
+    "title": "Carrier performance: delays, late rates, and worst-hit regions",
+    "layout": "deep-dive@1",
+    "params": {
+      "start_date": "2025-01-01",
+      "end_date": "2025-12-31"
+    },
+    "widgets": [
+      {
+        "id": "monthly-delay-trend",
+        "slot": "hero",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT date_trunc('month', delivered) AS month, AVG(delay_days) AS avg_delay_days FROM shipment_performance WHERE delivered IS NOT NULL AND delivered >= CAST({{params.start_date}} AS DATE) AND delivered <= CAST({{params.end_date}} AS DATE) AND delay_days IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "resultShape": {
+            "x": "month",
+            "y": "avg_delay_days"
+          }
+        },
+        "copy": {
+          "title": "Average delay by month",
+          "caption": "December shipments arrived 0.5 days early on average."
+        }
+      },
+      {
+        "id": "late-rate-by-carrier",
+        "slot": "breakdowns",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  carrier AS carrier,\n  ROUND(100.0 * AVG(CASE WHEN is_late THEN 1.0 ELSE 0.0 END), 1) AS late_rate\nFROM shipment_performance\nWHERE delivered IS NOT NULL\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)\nGROUP BY 1\nORDER BY late_rate DESC, carrier\nLIMIT 10",
+          "resultShape": {
+            "x": "carrier",
+            "y": "late_rate"
+          }
+        },
+        "copy": {
+          "title": "Late rate by carrier",
+          "caption": "DB Schenker had the highest late rate at 75%, while DHL and FedEx had none."
+        }
+      },
+      {
+        "id": "worst-regions",
+        "slot": "breakdowns",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT\n  region,\n  ROUND(100.0 * AVG(CASE WHEN is_late THEN 1.0 ELSE 0.0 END), 1) AS late_rate_pct,\n  ROUND(AVG(delay_days), 1) AS avg_delay_days\nFROM shipment_performance\nWHERE status = 'delivered'\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)\nGROUP BY region\nORDER BY late_rate_pct DESC, avg_delay_days DESC\nLIMIT 10",
+          "resultShape": {
+            "label": "region",
+            "value": "late_rate_pct",
+            "delta": "avg_delay_days"
+          }
+        },
+        "copy": {
+          "title": "Late deliveries by region",
+          "caption": "Europe leads in late deliveries and delay days; North America and Latin America have no late shipments."
+        }
+      }
+    ]
+  }
+}

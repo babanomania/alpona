@@ -1,0 +1,85 @@
+{
+  "name": "Inventory risk",
+  "prompt": "Inventory risk: items below reorder point by category, days of cover for the riskiest SKUs, and warehouse utilization",
+  "spec": {
+    "specVersion": 1,
+    "title": "Inventory risk overview",
+    "layout": "deep-dive@1",
+    "params": {
+      "top_n": 10
+    },
+    "widgets": [
+      {
+        "id": "below-reorder-by-category",
+        "slot": "hero",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  category AS category,\n  COUNT(*) AS below_reorder_count\nFROM stock_risk\nWHERE below_reorder = TRUE\nGROUP BY 1\nORDER BY below_reorder_count DESC, category\nLIMIT {{params.top_n}}",
+          "resultShape": {
+            "x": "category",
+            "y": "below_reorder_count"
+          }
+        },
+        "copy": {
+          "title": "Reorder risk by category",
+          "caption": "Electronics has the most items below reorder point; Chemicals has the fewest."
+        }
+      },
+      {
+        "id": "riskiest-skus-cover",
+        "slot": "breakdowns",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "WITH sku_risk AS (\n  SELECT\n    sku,\n    product,\n    MIN(days_of_cover) AS min_days_of_cover\n  FROM stock_risk\n  WHERE below_reorder = TRUE\n    AND days_of_cover IS NOT NULL\n  GROUP BY sku, product\n)\nSELECT\n  sku || ' \u2014 ' || product AS sku_name,\n  ROUND(min_days_of_cover, 1) AS days_of_cover\nFROM sku_risk\nORDER BY days_of_cover ASC, sku_name ASC\nLIMIT {{params.top_n}}",
+          "resultShape": {
+            "label": "sku_name",
+            "value": "days_of_cover"
+          }
+        },
+        "copy": {
+          "title": "Lowest stock cover SKUs",
+          "caption": "Wiring Harness 2m is most at risk with 0.7 days of cover; the next items are under 2 days."
+        }
+      },
+      {
+        "id": "warehouse-utilization",
+        "slot": "breakdowns",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  warehouse AS warehouse,\n  utilization_pct AS utilization_pct\nFROM warehouse_utilization\nORDER BY utilization_pct DESC, warehouse",
+          "resultShape": {
+            "x": "warehouse",
+            "y": "utilization_pct"
+          }
+        },
+        "copy": {
+          "title": "Warehouse utilization",
+          "caption": "GDL-1 has the highest storage pressure at 34.9%, more than 10 points above the next site."
+        }
+      },
+      {
+        "id": "below-reorder-detail",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "WITH ranked AS (\n  SELECT\n    sku AS sku,\n    product AS product,\n    category AS category,\n    warehouse AS warehouse,\n    on_hand AS on_hand,\n    reorder_point AS reorder_point,\n    days_of_cover AS days_of_cover,\n    ROW_NUMBER() OVER (\n      ORDER BY\n        CASE WHEN days_of_cover IS NULL THEN 1 ELSE 0 END,\n        days_of_cover ASC,\n        (reorder_point - on_hand) DESC,\n        sku ASC\n    ) AS rn\n  FROM stock_risk\n  WHERE below_reorder = TRUE\n)\nSELECT\n  sku,\n  product,\n  category,\n  warehouse,\n  on_hand,\n  reorder_point,\n  days_of_cover\nFROM ranked\nWHERE rn <= LEAST(CAST({{params.top_n}} AS INTEGER), 50)\nORDER BY\n  CASE WHEN days_of_cover IS NULL THEN 1 ELSE 0 END,\n  days_of_cover ASC,\n  (reorder_point - on_hand) DESC,\n  sku ASC",
+          "resultShape": {
+            "columns": [
+              "sku",
+              "product",
+              "category",
+              "warehouse",
+              "on_hand",
+              "reorder_point",
+              "days_of_cover"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Critical stock risks",
+          "caption": "All listed SKUs are below reorder, with RTM-1 and packaging items at the thinnest cover."
+        }
+      }
+    ]
+  }
+}

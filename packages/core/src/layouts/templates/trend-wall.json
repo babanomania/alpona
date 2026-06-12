@@ -1,0 +1,31 @@
+{
+  "name": "trend-wall",
+  "version": 1,
+  "whenToUse": "Watching several time series at once: KPIs on top, a wall of trends below.",
+  "description": "KPI strip with a grid of trend charts underneath.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "kpis",
+      "role": "kpi-strip",
+      "description": "Current values of the tracked series.",
+      "accepts": ["kpi_card", "gauge"],
+      "minWidgets": 2,
+      "maxWidgets": 4,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 2 }
+    },
+    {
+      "id": "trends",
+      "role": "secondary",
+      "description": "The trend wall.",
+      "accepts": ["line_chart", "area_chart"],
+      "minWidgets": 2,
+      "maxWidgets": 4,
+      "packing": "grid",
+      "overflow": "wrap",
+      "region": { "x": 0, "y": 2, "w": 12, "h": 7 }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "ops-monitor",
+  "version": 2,
+  "whenToUse": "Operational monitoring: a few health KPIs, one dominant trend or breakdown, a side summary, and an actionable exception list.",
+  "description": "KPI strip across the top, large hero chart with a narrow side rail, full-width drill-down table below.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "kpis",
+      "role": "kpi-strip",
+      "description": "Three to four headline health metrics.",
+      "accepts": ["kpi_card", "gauge"],
+      "minWidgets": 2,
+      "maxWidgets": 4,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 2 }
+    },
+    {
+      "id": "hero",
+      "role": "hero",
+      "description": "The single most important trend or breakdown.",
+      "accepts": ["line_chart", "bar_chart", "area_chart", "heatmap"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 2, "w": 8, "h": 4 }
+    },
+    {
+      "id": "side",
+      "role": "side",
+      "description": "Compact composition or ranking next to the hero.",
+      "accepts": ["donut_chart", "leaderboard", "gauge", "kpi_card"],
+      "minWidgets": 1,
+      "maxWidgets": 2,
+      "packing": "column",
+      "overflow": "truncate",
+      "region": { "x": 8, "y": 2, "w": 4, "h": 4 }
+    },
+    {
+      "id": "detail",
+      "role": "table",
+      "description": "Actionable exception rows or drill-down detail.",
+      "accepts": ["table"],
+      "minWidgets": 0,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 6, "w": 12, "h": 5 }
+    }
+  ]
+}

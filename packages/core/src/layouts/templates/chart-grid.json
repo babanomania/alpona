@@ -1,0 +1,28 @@
+{
+  "name": "chart-grid",
+  "version": 1,
+  "whenToUse": "Several equally weighted views with no single headline — broad multi-angle requests.",
+  "description": "A uniform grid of two to six charts, no hierarchy.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "charts",
+      "role": "secondary",
+      "description": "Equally weighted charts arranged in a grid.",
+      "accepts": [
+        "line_chart",
+        "bar_chart",
+        "area_chart",
+        "donut_chart",
+        "heatmap",
+        "scatter_chart",
+        "leaderboard"
+      ],
+      "minWidgets": 2,
+      "maxWidgets": 6,
+      "packing": "grid",
+      "overflow": "wrap",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 8 }
+    }
+  ]
+}

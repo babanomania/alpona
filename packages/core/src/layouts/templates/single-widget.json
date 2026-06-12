@@ -1,0 +1,20 @@
+{
+  "name": "single-widget",
+  "version": 1,
+  "whenToUse": "One precise question deserving one full-bleed answer — a single chart, table, or number.",
+  "description": "A single widget filling the canvas.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "main",
+      "role": "hero",
+      "description": "The answer.",
+      "accepts": [],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 7 }
+    }
+  ]
+}

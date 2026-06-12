@@ -1,0 +1,42 @@
+{
+  "name": "focus-metric",
+  "version": 1,
+  "whenToUse": "One metric is the whole story: its current state, its trajectory, and what drives it.",
+  "description": "Large gauge or KPI on the left, the metric's trend on the right, drivers strip below.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "metric",
+      "role": "hero",
+      "description": "The focal metric's current state.",
+      "accepts": ["gauge", "kpi_card"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 4, "h": 4 }
+    },
+    {
+      "id": "trajectory",
+      "role": "hero",
+      "description": "How the metric has moved.",
+      "accepts": ["line_chart", "area_chart", "bar_chart"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 4, "y": 0, "w": 8, "h": 4 }
+    },
+    {
+      "id": "drivers",
+      "role": "secondary",
+      "description": "What moves the metric: breakdowns or rankings.",
+      "accepts": ["bar_chart", "leaderboard", "donut_chart", "heatmap", "table"],
+      "minWidgets": 1,
+      "maxWidgets": 3,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 4, "w": 12, "h": 4 }
+    }
+  ]
+}

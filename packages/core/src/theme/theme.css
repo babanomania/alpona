@@ -1,0 +1,511 @@
+/**
+ * Alpona theme — CSS-variable tokens, shadcn-compatible naming.
+ *
+ * The palette nods at the art form: alpona patterns are rice-paste white
+ * laid on earthen red. Light mode is chalk on paper with a vermillion
+ * accent; dark mode is the courtyard at dusk.
+ */
+
+:root {
+  --background: oklch(0.985 0.004 85);
+  --foreground: oklch(0.24 0.012 50);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.012 50);
+  --primary: oklch(0.55 0.19 33);
+  --primary-foreground: oklch(0.985 0.01 85);
+  --secondary: oklch(0.95 0.008 80);
+  --secondary-foreground: oklch(0.32 0.015 50);
+  --muted: oklch(0.955 0.006 80);
+  --muted-foreground: oklch(0.52 0.014 55);
+  --accent: oklch(0.93 0.02 60);
+  --accent-foreground: oklch(0.3 0.02 45);
+  --destructive: oklch(0.55 0.21 27);
+  --border: oklch(0.91 0.008 75);
+  --ring: oklch(0.55 0.19 33);
+  --radius: 0.250rem;
+
+  --chart-1: oklch(0.55 0.19 33);
+  --chart-2: oklch(0.52 0.11 230);
+  --chart-3: oklch(0.62 0.13 150);
+  --chart-4: oklch(0.7 0.14 80);
+  --chart-5: oklch(0.55 0.15 300);
+  --chart-6: oklch(0.65 0.12 200);
+  --chart-7: oklch(0.6 0.16 20);
+  --chart-8: oklch(0.5 0.09 270);
+
+  --alpona-positive: oklch(0.6 0.13 150);
+  --alpona-negative: oklch(0.55 0.21 27);
+  --alpona-row: 60px;
+  --alpona-gap: 12px;
+
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dark {
+  --background: oklch(0.19 0.012 55);
+  --foreground: oklch(0.93 0.008 80);
+  --card: oklch(0.23 0.012 55);
+  --card-foreground: oklch(0.93 0.008 80);
+  --primary: oklch(0.68 0.17 38);
+  --primary-foreground: oklch(0.16 0.012 50);
+  --secondary: oklch(0.27 0.012 55);
+  --secondary-foreground: oklch(0.88 0.01 80);
+  --muted: oklch(0.26 0.01 55);
+  --muted-foreground: oklch(0.66 0.012 70);
+  --accent: oklch(0.3 0.02 50);
+  --accent-foreground: oklch(0.9 0.012 80);
+  --destructive: oklch(0.62 0.19 27);
+  --border: oklch(0.3 0.012 55);
+  --ring: oklch(0.68 0.17 38);
+
+  --chart-1: oklch(0.68 0.17 38);
+  --chart-2: oklch(0.66 0.11 230);
+  --chart-3: oklch(0.7 0.13 150);
+  --chart-4: oklch(0.76 0.13 80);
+  --chart-5: oklch(0.65 0.14 300);
+  --chart-6: oklch(0.72 0.11 200);
+  --chart-7: oklch(0.68 0.15 20);
+  --chart-8: oklch(0.62 0.09 270);
+
+  --alpona-positive: oklch(0.7 0.13 150);
+  --alpona-negative: oklch(0.62 0.19 27);
+}
+
+/* ── Dashboard canvas ─────────────────────────────────────────── */
+
+.alpona-dashboard {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: var(--alpona-row);
+  gap: var(--alpona-gap);
+  font-family: var(--font-sans);
+  color: var(--foreground);
+}
+
+.alpona-widget {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.04);
+  overflow: hidden;
+  transition:
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.alpona-widget[data-selectable='true'] {
+  cursor: pointer;
+}
+
+.alpona-widget[data-selectable='true']:hover {
+  border-color: var(--ring);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.08);
+}
+
+.alpona-widget[data-selected='true'] {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring) 35%, transparent);
+}
+
+.alpona-widget--flip {
+  will-change: transform;
+}
+
+.alpona-widget__header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 16px 4px;
+  flex: none;
+}
+
+.alpona-widget__title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alpona-widget__caption {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: alpona-fade-in 480ms ease both;
+}
+
+.alpona-widget__body {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.alpona-widget__healed {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+
+/* ── Loading / error / empty states ───────────────────────────── */
+
+.alpona-skeleton {
+  flex: 1;
+  border-radius: calc(var(--radius) - 4px);
+  background: linear-gradient(
+    100deg,
+    var(--muted) 40%,
+    color-mix(in oklch, var(--muted) 60%, var(--card)) 50%,
+    var(--muted) 60%
+  );
+  background-size: 200% 100%;
+  animation: alpona-shimmer 1.4s ease-in-out infinite;
+}
+
+.alpona-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  padding: 12px;
+}
+
+.alpona-state--error {
+  color: var(--destructive);
+}
+
+.alpona-state__hint {
+  font-size: 11px;
+  opacity: 0.8;
+  max-width: 36ch;
+}
+
+.alpona-pending {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+@keyframes alpona-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes alpona-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── KPI / gauge / leaderboard ────────────────────────────────── */
+
+.alpona-kpi {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.alpona-kpi__value {
+  font-size: clamp(24px, 2.6vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.alpona-kpi__delta {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.alpona-kpi__delta--up {
+  color: var(--alpona-positive);
+}
+
+.alpona-kpi__delta--down {
+  color: var(--alpona-negative);
+}
+
+.alpona-gauge {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.alpona-gauge__value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.alpona-gauge__target {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.alpona-leaderboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.alpona-leaderboard__row {
+  display: grid;
+  grid-template-columns: minmax(60px, 38%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.alpona-leaderboard__label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--foreground);
+}
+
+.alpona-leaderboard__bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--chart-1);
+  min-width: 2px;
+  transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.alpona-leaderboard__bar--bad {
+  background: var(--alpona-negative);
+}
+
+.alpona-leaderboard__value {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+/* ── Table ────────────────────────────────────────────────────── */
+
+.alpona-table-wrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.alpona-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.alpona-table th {
+  position: sticky;
+  top: 0;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  text-align: left;
+  font-weight: 600;
+  padding: 8px 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.alpona-table th:hover {
+  color: var(--foreground);
+}
+
+.alpona-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+  font-variant-numeric: tabular-nums;
+}
+
+.alpona-table tr:last-child td {
+  border-bottom: none;
+}
+
+.alpona-table tbody tr:hover {
+  background: color-mix(in oklch, var(--accent) 45%, transparent);
+}
+
+.alpona-table td.alpona-table__num {
+  text-align: right;
+}
+
+.alpona-table th.alpona-table__num {
+  text-align: right;
+}
+
+/* ── Heatmap ──────────────────────────────────────────────────── */
+
+.alpona-heatmap {
+  flex: 1;
+  display: grid;
+  gap: 3px;
+  min-height: 0;
+  align-content: stretch;
+}
+
+.alpona-heatmap__cell {
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.alpona-heatmap__axis {
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Filter bar ───────────────────────────────────────────────── */
+
+.alpona-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 10px 0;
+  font-family: var(--font-sans);
+}
+
+.alpona-filterbar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.alpona-filterbar__label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+}
+
+.alpona-filterbar__input {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  outline: none;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.alpona-filterbar__input:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 20%, transparent);
+}
+
+/* ── Chart shared bits ────────────────────────────────────────── */
+
+.alpona-chart {
+  flex: 1;
+  min-height: 0;
+  font-size: 11px;
+}
+
+.alpona-chart .recharts-cartesian-axis-tick text {
+  fill: var(--muted-foreground);
+  font-size: 10.5px;
+}
+
+.alpona-chart .recharts-cartesian-grid line {
+  stroke: var(--border);
+}
+
+.alpona-chart .recharts-legend-item-text {
+  color: var(--muted-foreground) !important;
+  font-size: 11px;
+}
+
+.alpona-tooltip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.12);
+  padding: 8px 10px;
+  font-size: 11.5px;
+}
+
+.alpona-tooltip__label {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.alpona-tooltip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.alpona-tooltip__swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}

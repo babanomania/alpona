@@ -1,0 +1,25 @@
+id,sku,name,category,unit_cost,reorder_point
+1,FAS-0001,M6 Hex Bolt (500pk),Fasteners,14.5,220
+2,FAS-0002,M8 Lock Nut (500pk),Fasteners,11.2,180
+3,FAS-0003,Spring Washer (1000pk),Fasteners,8.9,260
+4,ELC-0101,12V DC Motor,Electronics,42.0,140
+5,ELC-0102,Stepper Driver Board,Electronics,38.7,120
+6,ELC-0103,Proximity Sensor,Electronics,27.3,160
+7,ELC-0104,Wiring Harness 2m,Electronics,19.8,200
+8,PLM-0201,ABS Pellets 25kg,Polymers,61.0,90
+9,PLM-0202,Nylon-6 Pellets 25kg,Polymers,74.5,80
+10,PLM-0203,PC Sheet 3mm,Polymers,88.0,60
+11,MTL-0301,Cold-Rolled Coil 1t,Metals,540.0,30
+12,MTL-0302,Aluminium Extrusion 6m,Metals,96.0,70
+13,MTL-0303,Stainless Rod 12mm,Metals,48.0,110
+14,PKG-0401,Corrugated Box L,Packaging,2.1,800
+15,PKG-0402,Stretch Film Roll,Packaging,9.4,300
+16,PKG-0403,Pallet EUR-1,Packaging,14.0,400
+17,BRG-0501,Ball Bearing 6204,Bearings,6.8,500
+18,BRG-0502,Tapered Bearing 30205,Bearings,12.3,320
+19,BRG-0503,Linear Rail 600mm,Bearings,54.2,90
+20,CHM-0601,Cutting Fluid 20L,Chemicals,46.5,75
+21,CHM-0602,Degreaser 10L,Chemicals,28.9,95
+22,TLG-0701,Carbide End Mill 8mm,Tooling,33.4,130
+23,TLG-0702,Drill Set HSS,Tooling,52.7,85
+24,TLG-0703,Insert CNMG-12,Tooling,7.6,420

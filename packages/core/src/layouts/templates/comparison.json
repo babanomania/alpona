@@ -1,0 +1,53 @@
+{
+  "name": "comparison",
+  "version": 1,
+  "whenToUse": "Explicit A-versus-B questions: two entities, periods, or scenarios examined side by side.",
+  "description": "KPI strip on top, two equal charts side by side, shared detail table below.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "kpis",
+      "role": "kpi-strip",
+      "description": "Summary numbers framing the comparison.",
+      "accepts": ["kpi_card", "gauge"],
+      "minWidgets": 0,
+      "maxWidgets": 4,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 2 }
+    },
+    {
+      "id": "left",
+      "role": "secondary",
+      "description": "First side of the comparison.",
+      "accepts": ["line_chart", "bar_chart", "area_chart", "donut_chart", "heatmap"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 2, "w": 6, "h": 4 }
+    },
+    {
+      "id": "right",
+      "role": "secondary",
+      "description": "Second side of the comparison.",
+      "accepts": ["line_chart", "bar_chart", "area_chart", "donut_chart", "heatmap"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 6, "y": 2, "w": 6, "h": 4 }
+    },
+    {
+      "id": "detail",
+      "role": "table",
+      "description": "Shared row-level detail.",
+      "accepts": ["table"],
+      "minWidgets": 0,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 6, "w": 12, "h": 4 }
+    }
+  ]
+}

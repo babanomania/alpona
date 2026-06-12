@@ -2,12 +2,11 @@
 
 **Generative UI for dashboards. Describe it — Alpona draws the pattern.**
 
-> **আলপনা** *(al-po-na)* — the Bengali art of drawing intricate patterns freehand, composed from a learned vocabulary of motifs. No two alponas are identical; none break the tradition's rules. That is exactly what this engine does with dashboards.
+> **আলপনা** _(al-po-na)_ — the Bengali art of drawing intricate patterns freehand, composed from a learned vocabulary of motifs. No two alponas are identical; none break the tradition's rules. That is exactly what this engine does with dashboards.
 
-Alpona is a **generative UI engine**: an LLM decides *what to show* and *how to fetch it*; a deterministic rendering engine decides *how it renders*. Type a plain-language description and watch a live, data-bound dashboard assemble itself — layout chosen, widgets selected, labels written, and every chart powered by agent-generated SQL that is validated, sandboxed, and self-healing.
+Alpona is a **generative UI engine**: an LLM decides _what to show_ and _how to fetch it_; a deterministic rendering engine decides _how it renders_. Type a plain-language description and watch a live, data-bound dashboard assemble itself — layout chosen, widgets selected, labels written, and every chart powered by agent-generated SQL that is validated, sandboxed, and self-healing.
 
 No code is generated. No template is hardcoded. The interface itself is the model's output — expressed as a spec your design system can trust.
-
 
 ## What it does
 
@@ -37,13 +36,13 @@ Alpona is a full-stack expression of the schema-driven school — and it pushes 
 
 Alpona splits the work by what each part is actually good at:
 
-| Concern | Owner | Why |
-|---|---|---|
-| What insights matter | **LLM (Planner)** | Meaning requires inference |
-| How data is fetched | **LLM (Binder)** → raw SQL | Full SQL power: windows, CTEs, pivots |
-| Where widgets go | **Code (Composer)** | Layout is constraint satisfaction, not inference |
-| What things are called | Data dictionary + LLM copy pass | Labels are lookups; narrative is judgment |
-| Whether SQL is safe | **Code (Guardrails)** | Security is never delegated to a model |
+| Concern                | Owner                           | Why                                              |
+| ---------------------- | ------------------------------- | ------------------------------------------------ |
+| What insights matter   | **LLM (Planner)**               | Meaning requires inference                       |
+| How data is fetched    | **LLM (Binder)** → raw SQL      | Full SQL power: windows, CTEs, pivots            |
+| Where widgets go       | **Code (Composer)**             | Layout is constraint satisfaction, not inference |
+| What things are called | Data dictionary + LLM copy pass | Labels are lookups; narrative is judgment        |
+| Whether SQL is safe    | **Code (Guardrails)**           | Security is never delegated to a model           |
 
 The agent can only fail in ways the system can catch — invalid specs are rejected by schema, illegal SQL is rejected by the AST gate, and broken queries are silently regenerated via the self-heal loop with the database's own error message as feedback.
 
@@ -81,19 +80,19 @@ The agent can only fail in ways the system can catch — invalid specs are rejec
 
 ### The four-stage pipeline
 
-1. **Planner** *(fast model)* — reads the layout library and data dictionary, picks a layout template, assigns insight slots. Streams immediately: the skeleton renders in under a second.
-2. **Binders** *(strong model, parallel)* — one call per slot. Receives DDL + sample rows + widget result-shape contracts; emits `{ widgetType, sql, resultShape }`. Failures self-heal: the database error is fed back and the binding regenerates — once, silently.
-3. **Composer** *(pure code)* — enforces slot contracts (min/max, accepted types, overflow rules), computes the responsive grid. The agent proposes; the composer disposes.
-4. **Copy pass** *(cheap model, async)* — titles and one-line insight captions fade in after data loads.
+1. **Planner** _(fast model)_ — reads the layout library and data dictionary, picks a layout template, assigns insight slots. Streams immediately: the skeleton renders in under a second.
+2. **Binders** _(strong model, parallel)_ — one call per slot. Receives DDL + sample rows + widget result-shape contracts; emits `{ widgetType, sql, resultShape }`. Failures self-heal: the database error is fed back and the binding regenerates — once, silently.
+3. **Composer** _(pure code)_ — enforces slot contracts (min/max, accepted types, overflow rules), computes the responsive grid. The agent proposes; the composer disposes.
+4. **Copy pass** _(cheap model, async)_ — titles and one-line insight captions fade in after data loads.
 
 ### The four contracts
 
-| Contract | Authored by | Consumed by |
-|---|---|---|
-| `DashboardSpec` (JSON Schema) | core | agent output gate, interpreter |
-| Layout slot contracts (10–15 templates) | designers | planner prompt, composer |
-| Widget registry entries (zod props, resultShape, sizing, agentHints) | design system | binder prompt, composer, validator |
-| Data dictionary (DDL + semantics + cardinality) | each implementation | planner + binder grounding, table allowlist |
+| Contract                                                             | Authored by         | Consumed by                                 |
+| -------------------------------------------------------------------- | ------------------- | ------------------------------------------- |
+| `DashboardSpec` (JSON Schema)                                        | core                | agent output gate, interpreter              |
+| Layout slot contracts (10–15 templates)                              | designers           | planner prompt, composer                    |
+| Widget registry entries (zod props, resultShape, sizing, agentHints) | design system       | binder prompt, composer, validator          |
+| Data dictionary (DDL + semantics + cardinality)                      | each implementation | planner + binder grounding, table allowlist |
 
 The data dictionary is the **only** place domain knowledge lives. The core engine never imports from an example — the dependency arrow points one way.
 
@@ -134,7 +133,7 @@ Principles borrowed deliberately:
 
 - **From Liquibase/Flyway:** ordered immutable migrations, a changelog table, checksum verification, drift detection. Editing an applied migration fails CI.
 - **From dbt:** seeds are data-as-code; analytical views live in `marts/` as version-controlled SQL transforms — the agent binds to marts first, raw tables second, which keeps generated SQL simpler and faster.
-- **Alpona-specific:** the data dictionary is *generated from the migrated schema*, never hand-drifted. If a migration adds a column, `alpona-db dictionary` picks it up and the agent knows about it on the next generation. Schema, dictionary, and agent grounding cannot disagree.
+- **Alpona-specific:** the data dictionary is _generated from the migrated schema_, never hand-drifted. If a migration adds a column, `alpona-db dictionary` picks it up and the agent knows about it on the next generation. Schema, dictionary, and agent grounding cannot disagree.
 
 The read-only `alpona_reader` role created in migrations is the security backstop: even if every guardrail above it failed, the database itself refuses writes.
 
@@ -163,34 +162,52 @@ alpona/
 
 ## Quickstart
 
+The fast path needs **no Docker and no API key** — the example runs on an
+in-process DuckDB file, and without a key the server uses a deterministic
+mock agent grounded in the same data dictionary the real one reads:
+
 ```bash
 git clone https://github.com/<you>/alpona && cd alpona
 pnpm install
 
-# 1. Start Postgres + apply migrations + seed + build marts
-docker compose -f examples/supply-chain/docker-compose.yml up -d
+# 1. Build the example database (DuckDB, zero infrastructure)
 pnpm alpona-db migrate && pnpm alpona-db seed && pnpm alpona-db marts
 pnpm alpona-db dictionary
 
-# 2. Configure the agent
-cp .env.example .env          # add ANTHROPIC_API_KEY
-
-# 3. Run
+# 2. Run
 pnpm dev                      # server :3001, app :5173
+```
+
+For the full experience, add the real agent and/or Postgres:
+
+```bash
+cp .env.example .env          # add ANTHROPIC_API_KEY or OPENAI_API_KEY for live generation
+
+# or run fully local against LM Studio (any OpenAI-compatible server works —
+# load the model with ≥16k context; the grounded prompts are ~4k tokens):
+#   OPENAI_BASE_URL=http://localhost:1234/v1
+#   ALPONA_PLANNER_MODEL=google/gemma-4-e4b   # + BINDER / COPY, same model
+
+# optional: Postgres instead of DuckDB
+docker compose -f examples/supply-chain/docker-compose.yml up -d
+export ALPONA_DB_ADMIN=postgres://alpona:alpona@localhost:5433/alpona
+pnpm alpona-db migrate && pnpm alpona-db seed && pnpm alpona-db marts && pnpm alpona-db dictionary
+# then point the server at the read-only role:
+#   ALPONA_DB=postgres://alpona_reader:alpona_reader@localhost:5433/alpona
 ```
 
 Open the app and try:
 
-> *"Supplier scorecard for this quarter — lead time trends, PO value by supplier, and flag anyone averaging more than 3 days late."*
+> _"Supplier scorecard for this quarter — lead time trends, PO value by supplier, and flag anyone averaging more than 3 days late."_
 
-Then click any widget and refine it: *"top 5 only"*, *"make this weekly"*, *"add a target line at 95%"*. Refinements arrive as RFC 6902 JSON Patches — widgets slide to their new positions; nothing regenerates that didn't change.
+Then click any widget and refine it: _"top 5 only"_, _"make this weekly"_, _"add a target line at 95%"_. Refinements arrive as RFC 6902 JSON Patches — widgets slide to their new positions; nothing regenerates that didn't change.
 
 ## The DashboardSpec at a glance
 
 ```jsonc
 {
   "title": "Warehouse Ops Monitor",
-  "layout": "ops-monitor@2",            // pinned template version
+  "layout": "ops-monitor@2", // pinned template version
   "params": { "from": "2026-05-01", "warehouse": "ALL" },
   "widgets": [
     {
@@ -198,11 +215,11 @@ Then click any widget and refine it: *"top 5 only"*, *"make this weekly"*, *"add
       "type": "line_chart",
       "binding": {
         "sql": "SELECT date_trunc('week', dispatched) AS wk, carrier, AVG(delay_days) AS avg_delay FROM shipment_performance WHERE dispatched >= {{params.from}} GROUP BY 1, 2 ORDER BY 1",
-        "resultShape": { "x": "wk", "y": "avg_delay", "series": "carrier" }
+        "resultShape": { "x": "wk", "y": "avg_delay", "series": "carrier" },
       },
-      "copy": { "title": "Carrier delay trend", "caption": null }
-    }
-  ]
+      "copy": { "title": "Carrier delay trend", "caption": null },
+    },
+  ],
 }
 ```
 
@@ -220,7 +237,9 @@ Agent-generated SQL crosses a trust boundary, so it is treated as hostile input:
 
 ## Roadmap
 
-- [ ] Layout library v1 (10 templates) and widget registry v1 (10 widgets)
+- [x] Layout library v1 (12 templates) and widget registry v1 (10 widgets)
+- [x] Adapters: PostgreSQL and in-process DuckDB (the zero-Docker path)
+- [x] Deterministic mock agent — demo and CI run without an API key
 - [ ] Spec gallery: save, fork, and share parameterized dashboards
 - [ ] Generative refinement UX: voice-style scoped edits, layout switching as a one-line patch
 - [ ] Additional adapters: MySQL, SQLite, server-side DuckDB
@@ -235,8 +254,4 @@ The most valuable contributions right now are **layout templates** (a JSON file 
 
 ---
 
-*Alpona is an exploration of where generative UI is heading: models that generate **decisions**, engines that render them, and specs that outlive the conversation that created them.*
-
-## License
-
-MIT
+_Alpona is an exploration of where generative UI is heading: models that generate **decisions**, engines that render them, and specs that outlive the conversation that created them._

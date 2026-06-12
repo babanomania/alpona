@@ -1,0 +1,57 @@
+{
+  "tables": {
+    "shipment_performance": {
+      "description": "One row per shipment with delay metrics — the first stop for any delivery, carrier, or lateness question.",
+      "columns": {
+        "delay_days": "Days late (positive) or early (negative) vs the promised date; NULL while in transit",
+        "is_late": "TRUE when delivered after the promised date",
+        "order_value": "Order value at risk in this shipment (quantity × unit price)",
+        "dispatched": "Date the shipment left the supplier",
+        "promised": "Committed delivery date",
+        "delivered": "Actual delivery date; NULL while in transit",
+        "warehouse": "Destination warehouse code",
+        "region": "Destination region"
+      }
+    },
+    "stock_risk": {
+      "description": "Stock level vs reorder point per SKU and warehouse — the first stop for stockout and replenishment questions.",
+      "columns": {
+        "below_reorder": "TRUE when on-hand stock is below the reorder point",
+        "days_of_cover": "On-hand stock divided by average daily demand; NULL when no demand history",
+        "on_hand": "Units currently in stock",
+        "reorder_point": "Replenishment is triggered below this level"
+      }
+    },
+    "warehouse_utilization": {
+      "description": "Units stored vs capacity per warehouse — the first stop for capacity and utilization questions.",
+      "columns": {
+        "utilization_pct": "Units stored as a percentage of capacity (0-100)",
+        "units_stored": "Total units currently stored"
+      }
+    },
+    "suppliers": {
+      "description": "Supplier master data.",
+      "columns": {
+        "reliability_score": "0-100 composite of on-time rate, defect rate, responsiveness"
+      }
+    },
+    "warehouses": { "description": "Warehouse master data." },
+    "products": { "description": "Product master data (SKUs)." },
+    "inventory": { "description": "Current on-hand stock per product and warehouse." },
+    "purchase_orders": {
+      "description": "Purchase orders placed with suppliers.",
+      "columns": {
+        "status": "pending | confirmed | shipped | delivered | cancelled"
+      }
+    },
+    "shipments": {
+      "description": "Inbound shipments fulfilling purchase orders. Prefer the shipment_performance mart for delay analysis.",
+      "columns": {
+        "delivered_at": "NULL while in transit"
+      }
+    },
+    "demand_history": {
+      "description": "Weekly outbound demand per product and warehouse (Mondays)."
+    }
+  }
+}

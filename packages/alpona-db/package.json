@@ -1,0 +1,25 @@
+{
+  "name": "alpona-db",
+  "version": "0.1.0",
+  "description": "Alpona database workflow CLI: migrate, seed, marts, dictionary, verify",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "alpona-db": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alpona/core": "workspace:*",
+    "@duckdb/node-api": "1.5.3-r.3",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.20.0"
+  }
+}

@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+*.tsbuildinfo
+
+# environment
+.env
+.env.local
+
+# databases & generated artifacts
+*.duckdb
+*.duckdb.wal
+examples/*/db/dictionary/dictionary.json
+
+# saved dashboards (local share-URL store)
+.alpona/
+
+# logs & caches
+*.log
+.cache/
+coverage/
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# scratch
+.scratch/

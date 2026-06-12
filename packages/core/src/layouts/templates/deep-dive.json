@@ -1,0 +1,42 @@
+{
+  "name": "deep-dive",
+  "version": 1,
+  "whenToUse": "A thorough investigation of one subject: dominant trend, multiple breakdowns, full detail rows.",
+  "description": "Full-width hero, a band of two to three breakdown charts, and a detail table.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "hero",
+      "role": "hero",
+      "description": "The subject's primary trend or distribution.",
+      "accepts": ["line_chart", "bar_chart", "area_chart", "heatmap"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 4 }
+    },
+    {
+      "id": "breakdowns",
+      "role": "secondary",
+      "description": "Two to three complementary breakdowns.",
+      "accepts": ["bar_chart", "donut_chart", "leaderboard", "heatmap", "scatter_chart"],
+      "minWidgets": 2,
+      "maxWidgets": 3,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 4, "w": 12, "h": 4 }
+    },
+    {
+      "id": "detail",
+      "role": "table",
+      "description": "Row-level evidence.",
+      "accepts": ["table"],
+      "minWidgets": 0,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 8, "w": 12, "h": 5 }
+    }
+  ]
+}

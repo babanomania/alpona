@@ -1,0 +1,42 @@
+{
+  "name": "exec-summary",
+  "version": 1,
+  "whenToUse": "Leadership summaries: one headline story, a column of key numbers, and two supporting views.",
+  "description": "Hero chart with a KPI rail on the right, two supporting charts below.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "hero",
+      "role": "hero",
+      "description": "The headline story.",
+      "accepts": ["line_chart", "bar_chart", "area_chart"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 8, "h": 4 }
+    },
+    {
+      "id": "highlights",
+      "role": "side",
+      "description": "Two to four key numbers stacked beside the hero.",
+      "accepts": ["kpi_card", "gauge"],
+      "minWidgets": 2,
+      "maxWidgets": 4,
+      "packing": "column",
+      "overflow": "truncate",
+      "region": { "x": 8, "y": 0, "w": 4, "h": 4 }
+    },
+    {
+      "id": "supporting",
+      "role": "secondary",
+      "description": "Two charts adding depth to the headline.",
+      "accepts": ["bar_chart", "donut_chart", "line_chart", "leaderboard", "heatmap", "area_chart"],
+      "minWidgets": 1,
+      "maxWidgets": 2,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 4, "w": 12, "h": 4 }
+    }
+  ]
+}

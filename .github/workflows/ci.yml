@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  example-e2e:
+    name: example e2e (duckdb, mock agent)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the example database (no Docker)
+        env:
+          ALPONA_DB: duckdb:./examples/supply-chain/db/alpona.duckdb
+        run: |
+          pnpm alpona-db migrate
+          pnpm alpona-db seed
+          pnpm alpona-db marts
+          pnpm alpona-db dictionary
+          pnpm alpona-db verify
+
+      - name: Generate a dashboard through the full pipeline
+        env:
+          ALPONA_MOCK: '1'
+        run: |
+          pnpm --filter @alpona/server start &
+          for i in $(seq 1 30); do
+            curl -fs localhost:3001/api/health && break || sleep 1
+          done
+          curl -fs -N -X POST localhost:3001/api/generate \
+            -H 'content-type: application/json' \
+            -d '{"prompt":"delayed shipments by carrier and SKUs below reorder point"}' \
+            --max-time 30 | tee /tmp/stream.txt
+          grep -q '"type":"plan"' /tmp/stream.txt
+          grep -q '"type":"widget"' /tmp/stream.txt
+          grep -q '"type":"done"' /tmp/stream.txt
+          ! grep -q '"type":"error"' /tmp/stream.txt
+
+      - name: Build the example app
+        run: pnpm --filter supply-chain-app build

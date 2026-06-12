@@ -1,0 +1,31 @@
+{
+  "name": "kpi-overview",
+  "version": 1,
+  "whenToUse": "A scoreboard of many headline numbers with one supporting trend — status-at-a-glance requests.",
+  "description": "Grid of KPI cards and gauges on top, one full-width trend chart underneath.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "kpis",
+      "role": "kpi-strip",
+      "description": "Four to eight headline metrics in a grid.",
+      "accepts": ["kpi_card", "gauge"],
+      "minWidgets": 3,
+      "maxWidgets": 8,
+      "packing": "grid",
+      "overflow": "wrap",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 4 }
+    },
+    {
+      "id": "trend",
+      "role": "hero",
+      "description": "One trend that contextualizes the scoreboard.",
+      "accepts": ["line_chart", "area_chart", "bar_chart"],
+      "minWidgets": 0,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 4, "w": 12, "h": 4 }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+CREATE TABLE warehouses (
+  id INTEGER PRIMARY KEY,
+  code VARCHAR(8) NOT NULL,
+  city VARCHAR(40) NOT NULL,
+  region VARCHAR(20) NOT NULL,
+  capacity_units INTEGER NOT NULL
+);

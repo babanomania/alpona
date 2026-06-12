@@ -1,0 +1,108 @@
+{
+  "name": "Supplier scorecard",
+  "prompt": "supplier scorecard: lead time trends, PO value by supplier, and flag anyone averaging more than 3 days late",
+  "spec": {
+    "specVersion": 1,
+    "title": "Supplier scorecard",
+    "layout": "ops-monitor@2",
+    "params": {
+      "start_date": "2025-01-01",
+      "end_date": "2025-12-31"
+    },
+    "widgets": [
+      {
+        "id": "supplier-late-rate",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "WITH filtered AS (\n  SELECT is_late\n  FROM shipment_performance\n  WHERE delivered IS NOT NULL\n    AND delivered >= CAST({{params.start_date}} AS DATE)\n    AND delivered <= CAST({{params.end_date}} AS DATE)\n)\nSELECT COALESCE(ROUND(100.0 * AVG(CASE WHEN is_late THEN 1.0 ELSE 0.0 END), 1), 0.0) AS late_share_pct\nFROM filtered",
+          "resultShape": {
+            "value": "late_share_pct"
+          }
+        },
+        "copy": {
+          "title": "Late shipment share",
+          "caption": "21.6% of delivered shipments were late in the selected period."
+        }
+      },
+      {
+        "id": "avg-delay-days",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COALESCE(ROUND(AVG(delay_days), 1), 0) AS value\nFROM shipment_performance\nWHERE status = 'delivered'\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)",
+          "resultShape": {
+            "value": "value"
+          }
+        },
+        "copy": {
+          "title": "Average delay days",
+          "caption": "Delivered shipments arrived 0.5 days early on average."
+        }
+      },
+      {
+        "id": "late-supplier-count",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "WITH supplier_delays AS (\n  SELECT\n    supplier,\n    AVG(delay_days) AS avg_delay_days\n  FROM shipment_performance\n  WHERE delivered >= CAST({{params.start_date}} AS DATE)\n    AND delivered <= CAST({{params.end_date}} AS DATE)\n    AND delay_days IS NOT NULL\n  GROUP BY supplier\n)\nSELECT COUNT(*) AS supplier_count\nFROM supplier_delays\nWHERE avg_delay_days > 3",
+          "resultShape": {
+            "value": "supplier_count"
+          }
+        },
+        "copy": {
+          "title": "Suppliers over 3 days late",
+          "caption": "No suppliers had an average delay above 3 days in the selected period."
+        }
+      },
+      {
+        "id": "lead-time-trend",
+        "slot": "hero",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT\n  date_trunc('month', delivered) AS month,\n  carrier,\n  AVG(delay_days) AS avg_delay_days\nFROM shipment_performance\nWHERE delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)\n  AND delay_days IS NOT NULL\nGROUP BY 1, 2\nORDER BY month, carrier",
+          "resultShape": {
+            "x": "month",
+            "y": "avg_delay_days",
+            "series": "carrier"
+          }
+        },
+        "copy": {
+          "title": "Carrier delay trends",
+          "caption": "DB Schenker averaged the longest delays, while FedEx and Maersk delivered ahead of schedule."
+        }
+      },
+      {
+        "id": "po-value-by-supplier",
+        "slot": "side",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT\n  s.name AS supplier,\n  ROUND(SUM(po.quantity * po.unit_price), 2) AS po_value\nFROM purchase_orders AS po\nJOIN suppliers AS s\n  ON po.supplier_id = s.id\nWHERE po.ordered_at >= CAST({{params.start_date}} AS DATE)\n  AND po.ordered_at <= CAST({{params.end_date}} AS DATE)\nGROUP BY s.name\nORDER BY po_value DESC\nLIMIT 10",
+          "resultShape": {
+            "label": "supplier",
+            "value": "po_value"
+          }
+        },
+        "copy": {
+          "title": "Supplier PO value ranking",
+          "caption": "Huang & Sons, Ltd had the highest purchase order value in the selected period."
+        }
+      },
+      {
+        "id": "late-suppliers-exception",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT supplier AS supplier, COUNT(*) AS shipment_count, ROUND(AVG(delay_days), 1) AS avg_delay_days FROM shipment_performance WHERE delivered >= CAST({{params.start_date}} AS DATE) AND delivered <= CAST({{params.end_date}} AS DATE) AND delay_days IS NOT NULL GROUP BY supplier HAVING AVG(delay_days) > 3 ORDER BY avg_delay_days DESC, shipment_count DESC LIMIT 50",
+          "resultShape": {
+            "columns": ["supplier", "shipment_count", "avg_delay_days"]
+          }
+        },
+        "copy": {
+          "title": "Late supplier exceptions",
+          "caption": "No suppliers averaged more than 3 delay days in the selected period."
+        }
+      }
+    ]
+  }
+}

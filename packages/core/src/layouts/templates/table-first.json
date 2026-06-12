@@ -1,0 +1,42 @@
+{
+  "name": "table-first",
+  "version": 1,
+  "whenToUse": "Worklist requests where the rows are the product: queues, exception lists, things to action today.",
+  "description": "Dominant table on the left, compact summary rail on the right, optional KPI strip on top.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "kpis",
+      "role": "kpi-strip",
+      "description": "Counts that size the workload.",
+      "accepts": ["kpi_card", "gauge"],
+      "minWidgets": 0,
+      "maxWidgets": 4,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 12, "h": 2 }
+    },
+    {
+      "id": "worklist",
+      "role": "table",
+      "description": "The actionable rows.",
+      "accepts": ["table"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 2, "w": 8, "h": 6 }
+    },
+    {
+      "id": "summary",
+      "role": "side",
+      "description": "Composition or ranking of the worklist.",
+      "accepts": ["donut_chart", "leaderboard", "bar_chart", "gauge"],
+      "minWidgets": 1,
+      "maxWidgets": 2,
+      "packing": "column",
+      "overflow": "truncate",
+      "region": { "x": 8, "y": 2, "w": 4, "h": 6 }
+    }
+  ]
+}

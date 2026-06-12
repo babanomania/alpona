@@ -1,0 +1,50 @@
+{
+  "name": "two-tier",
+  "version": 1,
+  "whenToUse": "A headline view plus a tier of secondary angles, without KPIs or tables.",
+  "description": "Hero chart with side rail on top, two to three secondary charts below.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "hero",
+      "role": "hero",
+      "description": "The headline view.",
+      "accepts": ["line_chart", "bar_chart", "area_chart", "heatmap"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 8, "h": 4 }
+    },
+    {
+      "id": "side",
+      "role": "side",
+      "description": "Compact companion to the hero.",
+      "accepts": ["donut_chart", "leaderboard", "gauge", "kpi_card"],
+      "minWidgets": 1,
+      "maxWidgets": 2,
+      "packing": "column",
+      "overflow": "truncate",
+      "region": { "x": 8, "y": 0, "w": 4, "h": 4 }
+    },
+    {
+      "id": "secondary",
+      "role": "secondary",
+      "description": "Additional angles on the same question.",
+      "accepts": [
+        "line_chart",
+        "bar_chart",
+        "area_chart",
+        "donut_chart",
+        "scatter_chart",
+        "leaderboard",
+        "heatmap"
+      ],
+      "minWidgets": 2,
+      "maxWidgets": 3,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 4, "w": 12, "h": 4 }
+    }
+  ]
+}

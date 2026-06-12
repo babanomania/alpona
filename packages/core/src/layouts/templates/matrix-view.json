@@ -1,0 +1,42 @@
+{
+  "name": "matrix-view",
+  "version": 1,
+  "whenToUse": "Two crossed dimensions dominate the question (where × when, who × what) plus who is worst affected.",
+  "description": "Hero heatmap with a ranking rail, detail table below.",
+  "columns": 12,
+  "slots": [
+    {
+      "id": "matrix",
+      "role": "hero",
+      "description": "The crossed-dimension intensity view.",
+      "accepts": ["heatmap"],
+      "minWidgets": 1,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 0, "w": 8, "h": 5 }
+    },
+    {
+      "id": "ranking",
+      "role": "side",
+      "description": "Most affected entities.",
+      "accepts": ["leaderboard", "donut_chart", "kpi_card"],
+      "minWidgets": 1,
+      "maxWidgets": 2,
+      "packing": "column",
+      "overflow": "truncate",
+      "region": { "x": 8, "y": 0, "w": 4, "h": 5 }
+    },
+    {
+      "id": "detail",
+      "role": "table",
+      "description": "Row-level evidence behind the hot cells.",
+      "accepts": ["table"],
+      "minWidgets": 0,
+      "maxWidgets": 1,
+      "packing": "row",
+      "overflow": "truncate",
+      "region": { "x": 0, "y": 5, "w": 12, "h": 5 }
+    }
+  ]
+}

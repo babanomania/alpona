@@ -244,6 +244,8 @@ Open the app and try:
 
 Then click any widget and refine it: _"top 5 only"_, _"make this weekly"_, _"add a target line at 95%"_. Refinements arrive as RFC 6902 JSON Patches — widgets slide to their new positions; nothing regenerates that didn't change.
 
+Try asking the dashboard, "Show me the fastest supplier this quarter." The answer appears as a widget on the conversation sidebar, which you can pin to the dashboard.
+
 ## The DashboardSpec at a glance
 
 ```jsonc

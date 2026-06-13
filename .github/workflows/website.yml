@@ -36,4 +36,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./website/dist
-          # peaceiris adds .nojekyll automatically (enable_jekyll defaults false)
+          # Keep gh-pages a single clean commit; never conflicts with a
+          # manual publish. peaceiris adds .nojekyll automatically.
+          force_orphan: true

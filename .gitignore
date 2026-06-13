@@ -37,3 +37,8 @@ coverage/
 
 # installers
 *.dmg
+
+# Astro site build output + generated reference docs
+website/dist/
+website/.astro/
+website/src/content/docs/reference/

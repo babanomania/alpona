@@ -48,10 +48,15 @@ services:
       ALPONA_SOURCE_NAME: ${ALPONA_DATASET:-supply-chain}
       ALPONA_STUDIO_DIR: /app/packages/studio/dist
       ALPONA_PORT: '3001'
-      # Agent: leave keys unset for the deterministic mock agent.
+      # Agent: leave keys unset for the deterministic mock agent. Set
+      # OPENAI_API_KEY or ANTHROPIC_API_KEY in deploy/.env for the live one.
+      ALPONA_PROVIDER: ${ALPONA_PROVIDER:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ALPONA_PLANNER_MODEL: ${ALPONA_PLANNER_MODEL:-}
+      ALPONA_BINDER_MODEL: ${ALPONA_BINDER_MODEL:-}
+      ALPONA_COPY_MODEL: ${ALPONA_COPY_MODEL:-}
       # Auth: none | apikey | oidc (see packages/server/src/auth).
       AUTH_MODE: ${AUTH_MODE:-none}
       ALPONA_API_KEY: ${ALPONA_API_KEY:-}

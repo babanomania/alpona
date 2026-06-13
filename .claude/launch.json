@@ -12,6 +12,13 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@alpona/server", "dev"],
       "port": 3001
+    },
+    {
+      "name": "alpona-website",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@alpona/website", "dev", "--port", "4321"],
+      "port": 4321,
+      "env": { "BASE_PATH": "/" }
     }
   ]
 }

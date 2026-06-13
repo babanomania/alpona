@@ -107,9 +107,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     anthropicApiKey: env.ANTHROPIC_API_KEY || undefined,
     openaiApiKey: env.OPENAI_API_KEY || undefined,
     openaiBaseUrl: env.OPENAI_BASE_URL || undefined,
-    plannerModel: env.ALPONA_PLANNER_MODEL ?? defaults.planner,
-    binderModel: env.ALPONA_BINDER_MODEL ?? defaults.binder,
-    copyModel: env.ALPONA_COPY_MODEL ?? defaults.copy,
+    // `||` (not `??`) so an empty env var — e.g. a compose passthrough left
+    // unset — falls back to the per-provider default rather than blanking it.
+    plannerModel: env.ALPONA_PLANNER_MODEL || defaults.planner,
+    binderModel: env.ALPONA_BINDER_MODEL || defaults.binder,
+    copyModel: env.ALPONA_COPY_MODEL || defaults.copy,
     maxRows: Number(env.ALPONA_MAX_ROWS ?? 1000),
     queryTimeoutMs: Number(env.ALPONA_QUERY_TIMEOUT_MS ?? 5000),
     dataDir: env.ALPONA_DATA_DIR ?? join(root, '.alpona/dashboards'),

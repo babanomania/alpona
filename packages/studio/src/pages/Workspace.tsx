@@ -212,11 +212,12 @@ export function Workspace({
     return (
       <div className="create">
         <h1>
-          Ask a question, or <br /><em>describe a view</em>.
+          Ask a question, or <br />
+          <em>describe a view</em>.
         </h1>
         <p className="create__sub">
-          One box, your data, plain language. A question gets an answer; <br /> a description gets a live
-          dashboard — Alpona decides.
+          One box, your data, plain language. A question gets an answer; <br /> a description gets a
+          live dashboard — Alpona decides.
         </p>
         <div className="create__box">
           <textarea

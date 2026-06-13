@@ -1949,10 +1949,17 @@ button.wordmark {
   margin-top: 11px;
 }
 
+/* Full-width, centered, single-line buttons in the narrow rail card. */
+.rail__card-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
 .btn--xs {
   height: 28px;
   padding: 0 11px;
   font-size: 12px;
+  white-space: nowrap;
   border-radius: calc(var(--radius) - 3px);
 }
 

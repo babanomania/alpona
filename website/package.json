@@ -1,0 +1,25 @@
+{
+  "name": "@alpona/website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gen": "tsx scripts/gen-reference.ts",
+    "dev": "pnpm gen && astro dev",
+    "build": "pnpm gen && astro build",
+    "preview": "astro preview",
+    "typecheck": "pnpm gen && astro check"
+  },
+  "dependencies": {
+    "@alpona/core": "workspace:*",
+    "@astrojs/starlight": "^0.30.3",
+    "astro": "^5.1.1",
+    "sharp": "^0.33.5",
+    "three": "^0.184.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/three": "^0.184.0",
+    "typescript": "^6.0.3"
+  }
+}

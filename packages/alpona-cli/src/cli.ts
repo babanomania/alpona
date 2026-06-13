@@ -181,6 +181,19 @@ async function main(): Promise<void> {
       console.log(`  ✓ ${result.starterSpecs} starter dashboards ready`);
     }
 
+    // Nudge about the model: with no key, the deterministic mock agent
+    // runs — point people at the live one rather than leaving them to
+    // wonder why generations feel canned.
+    const hasModel = Boolean(
+      process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.OPENAI_BASE_URL,
+    );
+    console.log(
+      hasModel
+        ? '\n  ◈ live agent configured'
+        : '\n  ℹ no model key set — running the deterministic mock agent.' +
+            '\n    add OPENAI_API_KEY or ANTHROPIC_API_KEY to .env for the live agent.',
+    );
+
     console.log('\n✓ setup complete · run: pnpm dev');
     return;
   }

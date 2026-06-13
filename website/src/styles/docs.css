@@ -1,0 +1,49 @@
+/* Alpona docs theme — night-floor dark with rice-paste ivory and the
+ * marigold/terracotta/plum accents. Maps onto Starlight's CSS variables. */
+:root {
+  --alpona-night: #130e12;
+  --alpona-night-2: #1a1218;
+  --alpona-card: #211720;
+  --alpona-line: #372a33;
+  --alpona-ivory: #f2e4c9;
+  --alpona-ivory-dim: #bcaa93;
+  --alpona-marigold: #e8a44a;
+  --alpona-terra: #c96a4a;
+  --alpona-plum: #8a2f4f;
+}
+
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #2a1a22;
+  --sl-color-accent: var(--alpona-terra);
+  --sl-color-accent-high: var(--alpona-marigold);
+  --sl-color-white: var(--alpona-ivory);
+  --sl-color-gray-1: #e7d8c2;
+  --sl-color-gray-2: var(--alpona-ivory-dim);
+  --sl-color-gray-3: #84746d;
+  --sl-color-gray-4: #5b4c52;
+  --sl-color-gray-5: var(--alpona-line);
+  --sl-color-gray-6: var(--alpona-night-2);
+  --sl-color-black: var(--alpona-night);
+  --sl-color-bg: var(--alpona-night);
+  --sl-color-bg-nav: rgba(19, 14, 18, 0.85);
+  --sl-color-bg-sidebar: var(--alpona-night);
+}
+
+:root {
+  --sl-font: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --sl-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* Display headings in Fraunces, the way the studio and landing read. */
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+.site-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 560;
+  letter-spacing: -0.01em;
+}
+
+.sl-markdown-content a {
+  color: var(--alpona-marigold);
+}

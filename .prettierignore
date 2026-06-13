@@ -10,3 +10,6 @@ PLAN.md
 
 # generated starter/canned report specs
 datasets/*/reports/
+
+# Astro site — checked by its own astro tooling
+website/

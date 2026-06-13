@@ -4,7 +4,15 @@ import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/*.gen.ts', 'coverage/**', 'design/**'],
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/*.gen.ts',
+      'coverage/**',
+      'design/**',
+      // The website is an Astro project with its own `astro check`.
+      'website/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

@@ -1,0 +1,48 @@
+# Opt-in Supabase Auth (GoTrue) overlay.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.auth.yml up
+#
+# Adds the GoTrue auth service and turns on JWT auth in Alpona. Signup is
+# disabled — users are admin-provisioned from the CLI:
+#
+#   alpona user add you@example.com
+#
+# GoTrue is internal (not published); the Alpona server reverse-proxies
+# /auth/v1/* to it, so the studio still lives on the single port 3001.
+
+services:
+  auth:
+    image: supabase/gotrue:v2.189.0
+    container_name: alpona-auth
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_DB_DRIVER: postgres
+      # The superuser owns the auth schema GoTrue migrates into.
+      DATABASE_URL: postgres://supabase_admin:${POSTGRES_PASSWORD:-alpona-super-secret}@db:5432/alpona?search_path=auth
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: '9999'
+      API_EXTERNAL_URL: http://localhost:3001/auth/v1
+      GOTRUE_SITE_URL: http://localhost:3001
+      # The shared HS256 secret — Alpona verifies tokens with the same one.
+      GOTRUE_JWT_SECRET: ${ALPONA_JWT_SECRET:-dev-only-change-me-a-long-random-secret}
+      GOTRUE_JWT_ISSUER: alpona
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_EXP: '3600'
+      # Admin-provisioned only: no public signup, no email server needed.
+      GOTRUE_DISABLE_SIGNUP: 'true'
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: 'true'
+      GOTRUE_MAILER_AUTOCONFIRM: 'true'
+    restart: unless-stopped
+
+  alpona:
+    environment:
+      AUTH_MODE: oidc
+      OIDC_ISSUER: alpona
+      OIDC_AUDIENCE: authenticated
+      ALPONA_JWT_SECRET: ${ALPONA_JWT_SECRET:-dev-only-change-me-a-long-random-secret}
+      ALPONA_AUTH_UPSTREAM: http://auth:9999
+    depends_on:
+      auth:
+        condition: service_started

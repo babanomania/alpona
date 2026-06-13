@@ -21,7 +21,7 @@ function write(path: string, content: string) {
 }
 
 beforeEach(async () => {
-  dir = mkdtempSync(join(tmpdir(), 'alpona-db-'));
+  dir = mkdtempSync(join(tmpdir(), 'alpona-cli-'));
   mkdirSync(join(dir, 'migrations'));
   mkdirSync(join(dir, 'seeds'));
   mkdirSync(join(dir, 'marts'));

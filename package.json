@@ -10,7 +10,7 @@
   },
   "packageManager": "pnpm@11.5.3",
   "scripts": {
-    "dev": "pnpm --parallel --filter @alpona/server --filter supply-chain-app dev",
+    "dev": "pnpm --parallel --filter @alpona/server --filter alpona-studio dev",
     "build": "pnpm -r build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -18,7 +18,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "alpona-db": "tsx packages/alpona-db/src/cli.ts"
+    "alpona": "tsx packages/alpona-cli/src/cli.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

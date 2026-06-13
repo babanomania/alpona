@@ -40,8 +40,22 @@ export interface CopyEvent {
 
 export interface StatusEvent {
   type: 'status';
-  phase: 'planning' | 'binding' | 'copy';
+  phase: 'classifying' | 'planning' | 'binding' | 'copy' | 'answering';
   message: string;
+}
+
+export interface AnswerEvent {
+  type: 'answer';
+  /** One-sentence answer grounded in the query result. */
+  answer: string;
+  /** The headline value when the result reduces to one. */
+  value?: string | number | null;
+  /** The exact SQL that produced it — every answer shows its work. */
+  sql: string;
+  /** Result rows backing the answer (capped), for the answer card. */
+  rows: Record<string, unknown>[];
+  /** Execution time, for the "ran this query · Ns" line. */
+  elapsedMs?: number;
 }
 
 export interface DoneEvent {
@@ -62,6 +76,7 @@ export type GenerationEvent =
   | PatchEvent
   | CopyEvent
   | StatusEvent
+  | AnswerEvent
   | DoneEvent
   | ErrorEvent;
 
@@ -71,6 +86,8 @@ export interface GenerateRequest {
   spec?: DashboardSpec;
   /** Scope a refinement to one widget ("top 5 only" on a click). */
   targetWidgetId?: string;
+  /** Pin an ask-mode answer onto the dashboard as a widget. */
+  pinAnswer?: { sql: string; title: string; columns: string[] };
 }
 
 export interface QueryRequest {

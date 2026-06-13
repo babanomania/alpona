@@ -1,25 +1,19 @@
 export { buildApp, type AppDeps } from './app.js';
-export { Pipeline, type EmitEvent } from './agent/pipeline.js';
-export { LiveAgent, extractJson } from './agent/live.js';
-export { OpenAiAgent, type OpenAiAgentOptions } from './agent/openai.js';
-export { MockAgent } from './agent/mock.js';
-export type {
-  AgentBackend,
-  PlannerOutput,
-  PlannedWidget,
-  BinderRequest,
-  BinderOutput,
-  CopyRequest,
-  CopyOutput,
-  RefineRequest,
-  RefineOutput,
-} from './agent/stages.js';
+export {
+  createAuthMiddleware,
+  type AuthConfig,
+  type AuthMode,
+  type AuthUser,
+} from './auth/middleware.js';
 export {
   FileDashboardStore,
+  dictionaryId,
   type DashboardStore,
   type SavedDashboard,
   type DashboardSummary,
+  type SaveInput,
 } from './store/dashboards.js';
+export { PostgresDashboardStore } from './store/postgres.js';
 export { suggestPrompts } from './suggest/suggestions.js';
 export { QueryService } from './query/service.js';
 export { prepareSql, bindParams, SqlRejectedError } from './query/guardrails.js';

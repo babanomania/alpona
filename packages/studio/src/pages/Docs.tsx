@@ -20,6 +20,7 @@ import {
   Table2,
   Terminal,
 } from 'lucide-react';
+import { authFetch } from '../auth.js';
 
 interface MetaLayout {
   name: string;
@@ -196,7 +197,7 @@ export function Docs({ onToast }: { onToast: (message: string) => void }) {
   const [active, setActive] = useState('quickstart');
 
   useEffect(() => {
-    void fetch('/api/meta')
+    void authFetch('/api/meta')
       .then((r) => (r.ok ? r.json() : null))
       .then((meta: { layouts?: MetaLayout[]; widgets?: MetaWidget[] } | null) => {
         if (meta?.layouts) setLayouts(meta.layouts);

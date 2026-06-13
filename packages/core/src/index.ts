@@ -32,6 +32,7 @@ export type {
   PatchEvent,
   CopyEvent,
   StatusEvent,
+  AnswerEvent,
   DoneEvent,
   ErrorEvent,
   GenerateRequest,

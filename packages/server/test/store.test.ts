@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { DashboardSpec } from '@alpona/core';
-import { FileDashboardStore } from '../src/store/dashboards.js';
+import { FileDashboardStore, dictionaryId } from '../src/store/dashboards.js';
 import { suggestPrompts } from '../src/suggest/suggestions.js';
 import { testDictionary } from './helpers.js';
 
@@ -77,5 +77,58 @@ describe('suggestPrompts', () => {
     expect(suggestions.some((s) => s.includes('late'))).toBe(true);
     // Deterministic: same dictionary, same suggestions.
     expect(suggestPrompts(testDictionary())).toEqual(suggestions);
+  });
+});
+
+describe('ownership & forking', () => {
+  it('hides private dashboards from other viewers, shows public ones', async () => {
+    const store = new FileDashboardStore(mkdtempSync(join(tmpdir(), 'alpona-store-')));
+    await store.save({ name: 'Mine', spec: validSpec(), owner: 'alice' });
+    await store.save({ name: 'Shared', spec: validSpec(), owner: 'alice', isPublic: true });
+
+    const aliceSees = await store.list('alice');
+    expect(aliceSees.map((d) => d.name).sort()).toEqual(['Mine', 'Shared']);
+
+    const bobSees = await store.list('bob');
+    expect(bobSees.map((d) => d.name)).toEqual(['Shared']);
+  });
+
+  it('never lets public visibility grant deletion', async () => {
+    const store = new FileDashboardStore(mkdtempSync(join(tmpdir(), 'alpona-store-')));
+    const shared = await store.save({
+      name: 'Shared',
+      spec: validSpec(),
+      owner: 'alice',
+      isPublic: true,
+    });
+    expect(await store.delete(shared.id, 'bob')).toBe(false);
+    expect(await store.delete(shared.id, 'alice')).toBe(true);
+  });
+
+  it('forks a visible dashboard under the viewer as owner', async () => {
+    const store = new FileDashboardStore(mkdtempSync(join(tmpdir(), 'alpona-store-')));
+    const shared = await store.save({
+      name: 'Ops board',
+      spec: validSpec(),
+      owner: 'alice',
+      isPublic: true,
+      dictionaryId: 'duckdb:abc123',
+    });
+    const fork = await store.fork(shared.id, 'bob');
+    expect(fork?.name).toBe('Copy of Ops board');
+    expect(fork?.owner).toBe('bob');
+    expect(fork?.dictionaryId).toBe('duckdb:abc123');
+    expect(fork?.id).not.toBe(shared.id);
+  });
+});
+
+describe('dictionaryId', () => {
+  it('is stable for identical shapes and changes when the schema drifts', () => {
+    const a = dictionaryId(testDictionary());
+    expect(a).toBe(dictionaryId(testDictionary()));
+    const drifted = testDictionary();
+    drifted.tables[0]!.columns.push({ name: 'new_col', type: 'integer' });
+    expect(dictionaryId(drifted)).not.toBe(a);
+    expect(a).toMatch(/^duckdb:[0-9a-f]{12}$/);
   });
 });

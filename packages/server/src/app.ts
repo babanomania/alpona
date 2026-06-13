@@ -3,34 +3,87 @@ import { cors } from 'hono/cors';
 import { streamSSE } from 'hono/streaming';
 import type { DashboardSpec, DataDictionary, GenerateRequest, QueryRequest } from '@alpona/core';
 import { interpret, layoutTemplates, widgetDefinitions } from '@alpona/core';
-import type { Pipeline } from './agent/pipeline.js';
+import type { AlponaAgent } from '@alpona/agent';
 import type { QueryService } from './query/service.js';
 import type { DashboardStore } from './store/dashboards.js';
+import { dictionaryId } from './store/dashboards.js';
+import type { AuthConfig, AuthUser } from './auth/middleware.js';
+import { createAuthMiddleware } from './auth/middleware.js';
 import { suggestPrompts } from './suggest/suggestions.js';
 import { SqlRejectedError } from './query/guardrails.js';
 import { RateLimiter } from './query/rate-limit.js';
 
 export interface AppDeps {
-  pipeline: Pipeline;
+  agent: AlponaAgent;
   queryService: QueryService;
   dictionary: DataDictionary;
   mock: boolean;
   store?: DashboardStore;
+  /** Registered data sources (active ALPONA_DB first; rest via `alpona connect`). */
+  sources?: { name: string; dialect: string; tables: number }[];
+  /** Curated prompt ideas from the dataset pack's prompts.json. */
+  promptIdeas?: { text: string; intent: 'ask' | 'build' }[];
+  /** Defaults to mode "none" — the playground must always work. */
+  auth?: AuthConfig;
+  /** Public auth-service URL the studio shows its login against (oidc). */
+  authUrl?: string;
+  /**
+   * Internal GoTrue base URL. When set, /auth/v1/* is reverse-proxied to
+   * it, so the studio authenticates same-origin (no CORS, one exposed
+   * port). The login/token traffic skips the bearer middleware.
+   */
+  authUpstream?: string;
 }
+
+type AppEnv = { Variables: { user: AuthUser } };
 
 /**
  * The HTTP surface. /api/generate streams the four-stage pipeline over
  * SSE (refinements included — send the current spec); /api/query is the
  * guarded query service the rendering engine hydrates widgets through.
  */
-export function buildApp(deps: AppDeps): Hono {
-  const app = new Hono();
+export function buildApp(deps: AppDeps): Hono<AppEnv> {
+  const app = new Hono<AppEnv>();
   const limiter = new RateLimiter();
+  const auth = deps.auth ?? { mode: 'none' as const };
 
   app.use('*', cors());
 
+  // Reverse-proxy the auth service so the studio logs in same-origin.
+  // This sits before the bearer middleware (which only guards /api/*) —
+  // logging in is necessarily unauthenticated.
+  if (deps.authUpstream) {
+    const upstream = deps.authUpstream.replace(/\/$/, '');
+    app.all('/auth/v1/*', async (c) => {
+      const path = c.req.path.replace(/^\/auth\/v1/, '');
+      const url = `${upstream}${path}${new URL(c.req.url).search}`;
+      const headers = new Headers(c.req.raw.headers);
+      headers.delete('host');
+      const init: RequestInit = { method: c.req.method, headers };
+      if (c.req.method !== 'GET' && c.req.method !== 'HEAD') {
+        init.body = await c.req.raw.arrayBuffer();
+      }
+      const response = await fetch(url, init);
+      return new Response(response.body, {
+        status: response.status,
+        headers: response.headers,
+      });
+    });
+  }
+
+  // Auth runs before every route; /api/health stays open for probes.
+  app.use('/api/*', createAuthMiddleware(auth));
+
   app.get('/api/health', (c) =>
-    c.json({ ok: true, mock: deps.mock, tables: deps.dictionary.tables.length }),
+    c.json({
+      ok: true,
+      mock: deps.mock,
+      auth: auth.mode,
+      // The studio reads this to decide whether to show a login screen
+      // and where to authenticate; never a credential, just the URL.
+      authUrl: auth.mode === 'none' ? undefined : deps.authUrl,
+      tables: deps.dictionary.tables.length,
+    }),
   );
 
   // Capabilities endpoint: lets clients introspect the contract versions.
@@ -68,10 +121,12 @@ export function buildApp(deps: AppDeps): Hono {
         await stream.writeSSE({ data: JSON.stringify(event) });
       };
       try {
-        if (request.spec) {
-          await deps.pipeline.refine(request.spec, request.prompt, request.targetWidgetId, emit);
+        if (request.pinAnswer && request.spec) {
+          await deps.agent.pin(request.spec, request.pinAnswer, emit);
+        } else if (request.spec) {
+          await deps.agent.refine(request.spec, request.prompt, request.targetWidgetId, emit);
         } else {
-          await deps.pipeline.generate(request.prompt, emit);
+          await deps.agent.generate(request.prompt, emit);
         }
       } catch (err) {
         await emit({
@@ -84,26 +139,54 @@ export function buildApp(deps: AppDeps): Hono {
 
   // Landing-page prompt suggestions, derived from the dictionary alone —
   // deterministic, so compute once and serve from memory.
-  const suggestions = suggestPrompts(deps.dictionary);
+  // Suggestions: the pack's curated prompts when it ships them, else
+  // derived from the dictionary. Each is intent-tagged for the chips
+  // (? = ask, ▦ = build); the LLM classifier still has the final say.
+  const suggestions =
+    deps.promptIdeas && deps.promptIdeas.length > 0
+      ? deps.promptIdeas
+      : suggestPrompts(deps.dictionary).map((text) => ({
+          text,
+          intent: (text.trimEnd().endsWith('?') ? 'ask' : 'build') as 'ask' | 'build',
+        }));
   app.get('/api/suggestions', (c) => c.json({ suggestions }));
+
+  // D6: data import lives in the CLI; the studio only ever reads this.
+  app.get('/api/sources', (c) => c.json({ sources: deps.sources ?? [] }));
+
+  // The catalog page is a pure renderer over this dictionary JSON.
+  app.get('/api/catalog', (c) =>
+    c.json({
+      generatedAt: deps.dictionary.generatedAt,
+      dialect: deps.dictionary.dialect,
+      tables: deps.dictionary.tables,
+    }),
+  );
 
   if (deps.store) {
     const store = deps.store;
+    const dictId = dictionaryId(deps.dictionary);
+    const viewer = (c: { get: (key: 'user') => { sub: string } }) => c.get('user').sub;
 
-    app.get('/api/dashboards', async (c) => c.json({ dashboards: await store.list() }));
+    app.get('/api/dashboards', async (c) => c.json({ dashboards: await store.list(viewer(c)) }));
 
     app.get('/api/dashboards/:id', async (c) => {
-      const saved = await store.get(c.req.param('id'));
+      const saved = await store.get(c.req.param('id'), viewer(c));
       return saved ? c.json(saved) : c.json({ error: 'dashboard not found' }, 404);
     });
 
     app.delete('/api/dashboards/:id', async (c) => {
-      const deleted = await store.delete(c.req.param('id'));
+      const deleted = await store.delete(c.req.param('id'), viewer(c));
       return deleted ? c.json({ ok: true }) : c.json({ error: 'dashboard not found' }, 404);
     });
 
+    app.post('/api/dashboards/:id/fork', async (c) => {
+      const forked = await store.fork(c.req.param('id'), viewer(c));
+      return forked ? c.json(forked, 201) : c.json({ error: 'dashboard not found' }, 404);
+    });
+
     app.post('/api/dashboards', async (c) => {
-      let body: { name?: string; prompt?: string; spec?: DashboardSpec };
+      let body: { name?: string; prompt?: string; spec?: DashboardSpec; isPublic?: boolean };
       try {
         body = (await c.req.json()) as typeof body;
       } catch {
@@ -121,6 +204,9 @@ export function buildApp(deps: AppDeps): Hono {
         name,
         spec: body.spec,
         prompt: typeof body.prompt === 'string' ? body.prompt.slice(0, 500) : undefined,
+        owner: viewer(c),
+        isPublic: body.isPublic === true,
+        dictionaryId: dictId,
       });
       return c.json(saved, 201);
     });

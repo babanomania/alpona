@@ -7,7 +7,7 @@ Thanks for your interest! The two most valuable contributions right now are
 
 ```bash
 pnpm install
-pnpm alpona-db migrate && pnpm alpona-db seed && pnpm alpona-db marts && pnpm alpona-db dictionary
+pnpm alpona migrate && pnpm alpona seed && pnpm alpona marts && pnpm alpona dictionary
 pnpm dev          # server :3001 (mock agent without a key) + app :5173
 pnpm test         # vitest across all packages
 pnpm typecheck && pnpm lint && pnpm format:check
@@ -41,7 +41,7 @@ designers can contribute without writing code.
 
 Adapters live in `packages/server/src/adapters/` and implement the small
 `DbAdapter` interface (`execute`, `dialect`, `close`). Add the matching
-admin-side support in `packages/alpona-db/src/db.ts` so migrations and the
+admin-side support in `packages/alpona-cli/src/db.ts` so migrations and the
 dictionary builder work too. Mind the rules the existing adapters follow:
 
 - values bind positionally — never interpolate into SQL
@@ -61,6 +61,6 @@ them as carefully as the component.
   points one way. Domain knowledge lives only in data dictionaries.
 - Agent-generated SQL is hostile input. Anything that loosens the
   guardrails needs a very good story.
-- Applied migrations are immutable; CI runs `alpona-db verify`.
+- Applied migrations are immutable; CI runs `alpona verify`.
 - All four gates must pass: `pnpm test`, `pnpm typecheck`, `pnpm lint`,
   `pnpm format:check`.

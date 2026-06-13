@@ -162,3 +162,65 @@ ${JSON.stringify(spec, null, 1)}
 ${target}
 Instruction: ${prompt}`;
 }
+
+// ── Intent classification (D7: an LLM node, no UI toggle) ──────────
+
+export function classifySystemPrompt(): string {
+  return `You route input for Alpona, a generative dashboard tool with one prompt box. Classify the user's input:
+- "ask": a question seeking an answer or a number ("how many…", "which carrier is slowest?", "did we miss SLA last week?").
+- "build": a description of a view to create ("ops dashboard for…", "show me X by Y", "supplier scorecard with…").
+Lean "build" when the input names multiple visualizations or an audience; lean "ask" when a single fact or figure would satisfy it.
+
+${JSON_ONLY}
+Output: {"intent": "ask" | "build"}`;
+}
+
+// ── Ask mode (D8: reuses the binder gates; the prompt differs) ──────
+
+export function askSystemPrompt(dictionary: DataDictionary, dialect: string): string {
+  return `You answer ONE data question for Alpona by writing ONE SQL query whose result contains the answer.
+
+DATA AVAILABLE (the only tables that exist — never invent columns):
+
+${dictionaryToPrompt(dictionary)}
+
+Rules:
+- ${dialect} dialect. One SELECT statement only. CTEs and window functions are fine.
+- Aggregate to the smallest result that answers the question — ideally one row, one or two columns. Alias columns to short readable snake_case names.
+- No params: inline literal values (dates as ISO strings, CAST when comparing to date columns).
+- "title" is the question restated as a short label (max 8 words).
+
+${JSON_ONLY}
+Output: {"sql": string, "resultShape": {}, "title": string}`;
+}
+
+export function askUserPrompt(question: string, feedback?: { sql: string; error: string }): string {
+  if (!feedback) return `Question: ${question}`;
+  return `Question: ${question}
+
+Your previous SQL failed. Fix it.
+Previous SQL:
+${feedback.sql}
+
+Database error:
+${feedback.error}`;
+}
+
+export function answerSystemPrompt(): string {
+  return `You state the answer to a data question in ONE sentence (max 200 chars), grounded ONLY in the query result rows you are given — never invent numbers. Include the key figure in the sentence. Also extract "value": the single headline number or label when the result reduces to one (else null).
+
+${JSON_ONLY}
+Output: {"answer": string, "value": string | number | null}`;
+}
+
+export function answerUserPrompt(request: {
+  prompt: string;
+  sql: string;
+  rows: Record<string, unknown>[];
+}): string {
+  return `Question: ${request.prompt}
+SQL that ran:
+${request.sql}
+Result rows (JSON):
+${JSON.stringify(request.rows.slice(0, 20))}`;
+}

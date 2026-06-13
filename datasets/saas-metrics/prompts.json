@@ -1,0 +1,19 @@
+{
+  "prompts": [
+    { "text": "What's our total active MRR?", "intent": "ask" },
+    { "text": "How many accounts have churned?", "intent": "ask" },
+    {
+      "text": "Revenue dashboard: MRR by plan, churn rate by industry, and weekly feature adoption.",
+      "intent": "build"
+    },
+    {
+      "text": "Retention view — lifetime by plan, churned vs active accounts, and MRR at risk by region.",
+      "intent": "build"
+    },
+    { "text": "Which feature is used the most?", "intent": "ask" },
+    {
+      "text": "Growth scorecard: MRR by plan, seats by plan, and feature adoption trend by region.",
+      "intent": "build"
+    }
+  ]
+}

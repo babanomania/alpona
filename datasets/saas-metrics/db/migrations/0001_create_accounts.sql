@@ -1,0 +1,7 @@
+CREATE TABLE accounts (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR(60) NOT NULL,
+  industry VARCHAR(24) NOT NULL,
+  region VARCHAR(20) NOT NULL,
+  created_at DATE NOT NULL
+);

@@ -1,0 +1,19 @@
+{
+  "prompts": [
+    { "text": "How much revenue did we make last week?", "intent": "ask" },
+    { "text": "Which product category sells the most?", "intent": "ask" },
+    {
+      "text": "Store performance: weekly revenue by channel, top products by margin, and revenue by customer segment.",
+      "intent": "build"
+    },
+    {
+      "text": "Merchandising scorecard — best sellers, category mix, and units vs revenue.",
+      "intent": "build"
+    },
+    { "text": "What's our average order value by segment?", "intent": "ask" },
+    {
+      "text": "Growth dashboard: revenue trend, channel split, and the enterprise segment by country.",
+      "intent": "build"
+    }
+  ]
+}

@@ -22,7 +22,7 @@
   --destructive: oklch(0.55 0.21 27);
   --border: oklch(0.91 0.008 75);
   --ring: oklch(0.55 0.19 33);
-  --radius: 0.250rem;
+  --radius: 0.25rem;
 
   --chart-1: oklch(0.55 0.19 33);
   --chart-2: oklch(0.52 0.11 230);

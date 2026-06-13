@@ -1,0 +1,19 @@
+{
+  "prompts": [
+    { "text": "How many shipments ran late this month?", "intent": "ask" },
+    { "text": "Which carrier has the worst average delay?", "intent": "ask" },
+    {
+      "text": "Ops view for the warehouse team: delayed shipments by carrier, SKUs below reorder point, and utilization across warehouses.",
+      "intent": "build"
+    },
+    {
+      "text": "Supplier scorecard — PO value by supplier and who is averaging late.",
+      "intent": "build"
+    },
+    { "text": "How many SKUs are below their reorder point right now?", "intent": "ask" },
+    {
+      "text": "Compare carrier performance: late rate, monthly delay trend, worst regions.",
+      "intent": "build"
+    }
+  ]
+}

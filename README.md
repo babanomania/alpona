@@ -73,8 +73,8 @@ The agent can only fail in ways the system can catch — invalid specs are rejec
                     ▼
           ┌────────────────────┐
           │  PostgreSQL         │  read-only role
-          │  (migrated + seeded │  via alpona-db
-          │   via alpona-db)     │
+          │  (migrated + seeded │  via alpona
+          │   via alpona)       │
           └────────────────────┘
 ```
 
@@ -98,10 +98,10 @@ The data dictionary is the **only** place domain knowledge lives. The core engin
 
 ## Database deployment — migrations as code
 
-Alpona treats the database the way it treats dashboards: as a versioned, declarative, repeatable artifact. The `alpona-db` workflow is Liquibase/dbt-flavored:
+Alpona treats the database the way it treats dashboards: as a versioned, declarative, repeatable artifact. The Alpona CLI workflow is Liquibase/dbt-flavored:
 
 ```
-examples/supply-chain/db/
+datasets/supply-chain/db/
 ├── migrations/                  # Liquibase-style: ordered, immutable, checksummed
 │   ├── 0001_create_suppliers.sql
 │   ├── 0002_create_warehouses.sql
@@ -122,18 +122,18 @@ examples/supply-chain/db/
 ```
 
 ```bash
-alpona-db migrate    # apply pending migrations (tracked in alpona_changelog)
-alpona-db seed       # load seeds, idempotent
-alpona-db marts      # (re)create analytical views
-alpona-db dictionary # regenerate the data dictionary from live schema
-alpona-db verify     # checksums + drift detection against migrations
+alpona migrate    # apply pending migrations (tracked in alpona_changelog)
+alpona seed       # load seeds, idempotent
+alpona marts      # (re)create analytical views
+alpona dictionary # regenerate the data dictionary from live schema
+alpona verify     # checksums + drift detection against migrations
 ```
 
 Principles borrowed deliberately:
 
 - **From Liquibase/Flyway:** ordered immutable migrations, a changelog table, checksum verification, drift detection. Editing an applied migration fails CI.
 - **From dbt:** seeds are data-as-code; analytical views live in `marts/` as version-controlled SQL transforms — the agent binds to marts first, raw tables second, which keeps generated SQL simpler and faster.
-- **Alpona-specific:** the data dictionary is _generated from the migrated schema_, never hand-drifted. If a migration adds a column, `alpona-db dictionary` picks it up and the agent knows about it on the next generation. Schema, dictionary, and agent grounding cannot disagree.
+- **Alpona-specific:** the data dictionary is _generated from the migrated schema_, never hand-drifted. If a migration adds a column, `alpona dictionary` picks it up and the agent knows about it on the next generation. Schema, dictionary, and agent grounding cannot disagree.
 
 The read-only `alpona_reader` role created in migrations is the security backstop: even if every guardrail above it failed, the database itself refuses writes.
 
@@ -152,7 +152,7 @@ alpona/
 │   │   ├── agent/            # plan / bind / copy routes, prompts, SSE
 │   │   ├── query/            # guardrails, cache, rate limit, self-heal
 │   │   └── adapters/         # postgres.ts, duckdb.ts
-│   └── alpona-db/             # migration/seed/marts/dictionary CLI
+│   └── alpona-cli/             # migration/seed/marts/dictionary CLI
 └── examples/
     └── supply-chain/
         ├── db/               # migrations, seeds, marts, dictionary
@@ -171,11 +171,53 @@ git clone https://github.com/<you>/alpona && cd alpona
 pnpm install
 
 # 1. Build the example database (DuckDB, zero infrastructure)
-pnpm alpona-db migrate && pnpm alpona-db seed && pnpm alpona-db marts
-pnpm alpona-db dictionary
+pnpm alpona migrate && pnpm alpona seed && pnpm alpona marts
+pnpm alpona dictionary
 
 # 2. Run
 pnpm dev                      # server :3001, app :5173
+```
+
+Or let one command do all of it — migrate, seed, marts, dictionary,
+alias enrichment, 12 starter dashboards, and a .env:
+
+```bash
+pnpm alpona init           # then: pnpm dev
+```
+
+`init` also writes a **starter-dashboard gallery** — one board per layout,
+collectively exercising every widget type — so a fresh install opens full of
+examples instead of blank. Three dataset packs ship today; pick one:
+
+```bash
+pnpm alpona init --dataset supply-chain   # default: logistics & inventory
+pnpm alpona init --dataset ecommerce      # orders, products, revenue
+pnpm alpona init --dataset saas-metrics   # MRR, churn, feature adoption
+```
+
+Or run the whole thing (Supabase Postgres + Alpona + studio) in Docker
+with a lean `.env` — every variable has a working default:
+
+```bash
+cd deploy && docker compose up   # http://localhost:3001
+```
+
+Bring your own database any time — `connect` introspects it, builds a
+dictionary, **and generates the same starter gallery against your schema**,
+so you immediately see every layout and widget rendered on your own data:
+
+```bash
+pnpm alpona connect postgres://reader@your-host/yourdb --name warehouse
+```
+
+Turn on real Supabase Auth (login screen, per-user dashboards) — users are
+admin-provisioned, there is no public signup:
+
+```bash
+cd deploy
+docker compose -f docker-compose.yml -f docker-compose.auth.yml up   # adds GoTrue
+ALPONA_AUTH_URL=http://localhost:3001/auth/v1 ALPONA_JWT_SECRET=$ALPONA_JWT_SECRET \
+  pnpm alpona user add you@example.com          # then sign in at :3001
 ```
 
 For the full experience, add the real agent and/or Postgres:
@@ -189,9 +231,9 @@ cp .env.example .env          # add ANTHROPIC_API_KEY or OPENAI_API_KEY for live
 #   ALPONA_PLANNER_MODEL=google/gemma-4-e4b   # + BINDER / COPY, same model
 
 # optional: Postgres instead of DuckDB
-docker compose -f examples/supply-chain/docker-compose.yml up -d
+docker compose -f datasets/supply-chain/docker-compose.yml up -d
 export ALPONA_DB_ADMIN=postgres://alpona:alpona@localhost:5433/alpona
-pnpm alpona-db migrate && pnpm alpona-db seed && pnpm alpona-db marts && pnpm alpona-db dictionary
+pnpm alpona migrate && pnpm alpona seed && pnpm alpona marts && pnpm alpona dictionary
 # then point the server at the read-only role:
 #   ALPONA_DB=postgres://alpona_reader:alpona_reader@localhost:5433/alpona
 ```

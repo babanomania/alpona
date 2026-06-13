@@ -1,7 +1,7 @@
 /**
  * The data dictionary — the fourth contract.
  *
- * Generated from the live, migrated schema by `alpona-db dictionary`; never
+ * Generated from the live, migrated schema by `alpona dictionary`; never
  * hand-drifted. It is the ONLY place domain knowledge lives: the planner and
  * binder prompts are grounded in it, and the query guardrails derive their
  * table allowlist from it. Schema, dictionary, and agent grounding cannot
@@ -18,6 +18,8 @@ export interface DictionaryColumn {
   cardinality?: number;
   /** A few representative values, for agent grounding. Never secrets. */
   samples?: (string | number | boolean | null)[];
+  /** Synonyms written once at dictionary build time — retrieval recall aid. */
+  aliases?: string[];
 }
 
 export interface DictionaryTable {
@@ -27,6 +29,8 @@ export interface DictionaryTable {
   description?: string;
   rowCount?: number;
   columns: DictionaryColumn[];
+  /** Synonyms written once at dictionary build time — retrieval recall aid. */
+  aliases?: string[];
 }
 
 export interface DataDictionary {

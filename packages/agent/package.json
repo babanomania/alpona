@@ -1,0 +1,21 @@
+{
+  "name": "@alpona/agent",
+  "version": "0.1.0",
+  "description": "Alpona agent: classify / plan / bind / copy / answer pipeline (LangGraph internals, framework-agnostic surface) with grounded retrieval",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alpona/core": "workspace:*",
+    "@anthropic-ai/sdk": "^0.104.1",
+    "@langchain/langgraph": "^1.1.0",
+    "openai": "^6.42.0",
+    "zod": "^4.4.3"
+  }
+}

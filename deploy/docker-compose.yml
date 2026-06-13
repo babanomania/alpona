@@ -1,0 +1,66 @@
+# Alpona + Supabase Postgres, one command: docker compose up
+#
+# The .env next to this file stays lean — every variable has a working
+# default; set only what you change. With no model key the agent runs in
+# deterministic mock mode; the studio, data, guardrails, and saved
+# dashboards (with RLS) all work.
+#
+#   http://localhost:3001        studio + API (one origin, one port)
+#   postgres://…@localhost:5433  the Supabase Postgres, if you want in
+
+services:
+  db:
+    image: supabase/postgres:17.6.1.135
+    container_name: alpona-supabase-db
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-alpona-super-secret}
+      ALPONA_DB_PASSWORD: ${ALPONA_DB_PASSWORD:-alpona}
+      ALPONA_READER_PASSWORD: ${ALPONA_READER_PASSWORD:-alpona_reader}
+    ports:
+      - '5433:5432'
+    volumes:
+      - alpona-supabase-data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - ../packages/server/supabase:/specs:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U supabase_admin']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  alpona:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: alpona
+    ports:
+      - '3001:3001'
+    environment:
+      # Runtime queries go through the read-only role; only migrations
+      # and the specs store use the owner role.
+      ALPONA_DB: postgres://alpona_reader:${ALPONA_READER_PASSWORD:-alpona_reader}@db:5432/alpona
+      ALPONA_DB_ADMIN: postgres://alpona:${ALPONA_DB_PASSWORD:-alpona}@db:5432/alpona
+      ALPONA_SPECS_DB: postgres://alpona:${ALPONA_DB_PASSWORD:-alpona}@db:5432/alpona
+      # Dataset pack: supply-chain (default) | ecommerce | saas-metrics.
+      ALPONA_DATASET: ${ALPONA_DATASET:-supply-chain}
+      ALPONA_DICTIONARY: datasets/${ALPONA_DATASET:-supply-chain}/db/dictionary/dictionary.json
+      ALPONA_SEED_REPORTS: datasets/${ALPONA_DATASET:-supply-chain}/reports
+      ALPONA_SOURCE_NAME: ${ALPONA_DATASET:-supply-chain}
+      ALPONA_STUDIO_DIR: /app/packages/studio/dist
+      ALPONA_PORT: '3001'
+      # Agent: leave keys unset for the deterministic mock agent.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Auth: none | apikey | oidc (see packages/server/src/auth).
+      AUTH_MODE: ${AUTH_MODE:-none}
+      ALPONA_API_KEY: ${ALPONA_API_KEY:-}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  alpona-supabase-data:

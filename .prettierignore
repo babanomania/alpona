@@ -3,3 +3,10 @@ node_modules/
 pnpm-lock.yaml
 coverage/
 *.duckdb
+design/
+CLAUDE.md
+PLAN.md
+*.dmg
+
+# generated starter/canned report specs
+datasets/*/reports/

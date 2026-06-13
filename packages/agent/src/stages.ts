@@ -1,12 +1,19 @@
 import { z } from 'zod';
-import type { DashboardSpec, ParamValue, ResultShape } from '@alpona/core';
+import type { DashboardSpec, DataDictionary, ParamValue, ResultShape } from '@alpona/core';
 import type { PatchOperation } from '@alpona/core';
 
 /**
- * Stage contracts for the four-stage pipeline. Both backends — the live
- * Anthropic one and the deterministic mock — implement this interface, so
- * the pipeline, routes, and tests are backend-agnostic.
+ * Stage contracts for the five-stage pipeline: classify / plan / bind /
+ * copy / answer (+ refine). Every backend — Anthropic, OpenAI-compatible,
+ * and the deterministic mock — implements this interface, so the graph,
+ * server routes, and tests are backend-agnostic.
  */
+
+export type Intent = 'ask' | 'build';
+
+export interface ClassifyOutput {
+  intent: Intent;
+}
 
 export interface PlannedWidget {
   id: string;
@@ -29,6 +36,14 @@ export interface BinderRequest {
   userPrompt: string;
   /** Set on the self-heal attempt: the database's own error message. */
   feedback?: { sql: string; error: string };
+  /**
+   * Grounding override: the retrieval-narrowed dictionary when the full
+   * one exceeds the token budget. Self-heal attempts pass the FULL
+   * dictionary here (the D9 relation-not-found fallback).
+   */
+  dictionary?: DataDictionary;
+  /** 'ask' binds one query that answers a question, not a widget. */
+  intent?: Intent;
 }
 
 export interface BinderOutput {
@@ -62,14 +77,43 @@ export interface RefineOutput {
   operations: PatchOperation[];
 }
 
+export interface AnswerRequest {
+  prompt: string;
+  sql: string;
+  columns: string[];
+  /** Result rows (capped) the answer must be grounded in. */
+  rows: Record<string, unknown>[];
+}
+
+export interface AnswerOutput {
+  /** One sentence, stating the finding — never a description of the query. */
+  answer: string;
+  /** The headline value when the result reduces to one. */
+  value?: string | number | null;
+}
+
 export interface AgentBackend {
-  plan(userPrompt: string): Promise<PlannerOutput>;
+  classify(userPrompt: string): Promise<ClassifyOutput>;
+  plan(userPrompt: string, dictionary?: DataDictionary): Promise<PlannerOutput>;
   bind(request: BinderRequest): Promise<BinderOutput>;
   copy(request: CopyRequest): Promise<CopyOutput>;
+  answer(request: AnswerRequest): Promise<AnswerOutput>;
   refine(request: RefineRequest): Promise<RefineOutput>;
 }
 
 // ── Output schemas (the parse gate for LLM responses) ──────────────
+
+export const classifyOutputSchema = z.object({
+  intent: z.enum(['ask', 'build']),
+});
+
+export const answerOutputSchema = z.object({
+  answer: z
+    .string()
+    .min(1)
+    .transform((s) => s.slice(0, 300)),
+  value: z.union([z.string(), z.number(), z.null()]).optional(),
+});
 
 // The planner stage has no heal loop, so its advisory-only fields clamp
 // instead of failing: title heads the dashboard and insight only guides

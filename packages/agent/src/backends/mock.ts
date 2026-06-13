@@ -2,15 +2,18 @@ import type { DataDictionary, DictionaryColumn, DictionaryTable } from '@alpona/
 import { getLayout } from '@alpona/core';
 import type {
   AgentBackend,
+  AnswerOutput,
+  AnswerRequest,
   BinderOutput,
   BinderRequest,
+  ClassifyOutput,
   CopyOutput,
   CopyRequest,
   PlannedWidget,
   PlannerOutput,
   RefineOutput,
   RefineRequest,
-} from './stages.js';
+} from '../stages.js';
 
 /**
  * The deterministic mock backend: a tiny rule-based "agent" grounded in
@@ -67,10 +70,17 @@ function titleCase(name: string): string {
 export class MockAgent implements AgentBackend {
   constructor(private readonly dictionary: DataDictionary) {}
 
-  async plan(userPrompt: string): Promise<PlannerOutput> {
-    const tables = pickTables(this.dictionary, userPrompt);
+  async classify(userPrompt: string): Promise<ClassifyOutput> {
+    const q = userPrompt.trim().toLowerCase();
+    const interrogative =
+      /^(how|what|which|who|when|where|why|did|do|does|is|are|was|were|can|count)\b/;
+    return { intent: q.endsWith('?') || interrogative.test(q) ? 'ask' : 'build' };
+  }
+
+  async plan(userPrompt: string, dictionary?: DataDictionary): Promise<PlannerOutput> {
+    const tables = pickTables(dictionary ?? this.dictionary, userPrompt);
     const primary = tables[0];
-    if (!primary) throw new Error('data dictionary has no tables — run alpona-db dictionary');
+    if (!primary) throw new Error('data dictionary has no tables — run alpona dictionary');
 
     const lower = userPrompt.toLowerCase();
     const layoutRef = /\b(vs|versus|compare|comparison)\b/.test(lower)
@@ -150,10 +160,23 @@ export class MockAgent implements AgentBackend {
 
   async bind(request: BinderRequest): Promise<BinderOutput> {
     const { widget } = request;
+    const grounding = request.dictionary ?? this.dictionary;
+
+    if (request.intent === 'ask') {
+      const source = pickTables(grounding, request.userPrompt)[0]!;
+      const wantsAverage = /average|avg|mean/i.test(request.userPrompt) && source.measure;
+      const measure = wantsAverage ? `ROUND(AVG(${source.measure!.name}), 2)` : 'COUNT(*)';
+      return {
+        sql: `SELECT ${measure} AS value FROM ${source.table.name}`,
+        resultShape: {},
+        title: request.userPrompt.replace(/\?+\s*$/, '').slice(0, 60),
+      };
+    }
+
     // Self-heal fallback: something trivially correct on any dictionary.
     if (request.feedback) return this.fallbackBinding(widget);
 
-    const tables = pickTables(this.dictionary, widget.insight);
+    const tables = pickTables(grounding, widget.insight);
     const source = tables[0]!;
     const t = source.table.name;
     const dateFilter =
@@ -203,6 +226,16 @@ export class MockAgent implements AgentBackend {
           sql: `SELECT ${source.category!.name} AS label, COUNT(*) AS n FROM ${t}${dateFilter} GROUP BY 1 ORDER BY 2 DESC LIMIT 6`,
           resultShape: { label: 'label', value: 'n' },
           title: `${titleCase(source.category!.name)} mix`,
+        };
+      }
+      case 'scatter_chart': {
+        // Distribution of a measure vs. its frequency — a valid x/y cloud
+        // on any table with a numeric column.
+        const measure = source.measure!;
+        return {
+          sql: `SELECT ROUND(${measure.name}, 1) AS x, COUNT(*) AS n FROM ${t}${dateFilter} GROUP BY 1 ORDER BY 1 LIMIT 100`,
+          resultShape: { x: 'x', y: 'n' },
+          title: `${titleCase(measure.name)} distribution`,
         };
       }
       case 'gauge': {
@@ -302,6 +335,15 @@ export class MockAgent implements AgentBackend {
           title: `${title} count`,
         };
     }
+  }
+
+  async answer(request: AnswerRequest): Promise<AnswerOutput> {
+    const first = request.rows[0];
+    if (!first) return { answer: 'No rows matched that question.', value: null };
+    const raw = Object.values(first)[0];
+    const value = typeof raw === 'number' || typeof raw === 'string' ? raw : String(raw);
+    const question = request.prompt.replace(/\?+\s*$/, '');
+    return { answer: `${question}: ${String(value)}.`.slice(0, 200), value };
   }
 
   async copy(request: CopyRequest): Promise<CopyOutput> {

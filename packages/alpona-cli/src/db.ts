@@ -1,5 +1,5 @@
 /**
- * Admin database handle for alpona-db. Unlike the server's read-only
+ * Admin database handle for the Alpona CLI. Unlike the server's read-only
  * adapter, this one writes — it owns migrations, seeds, and marts.
  */
 

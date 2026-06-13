@@ -1,11 +1,31 @@
 import { useCallback, useRef, useState } from 'react';
 import type { DashboardSpec, ParamValue, QueryResult } from '../types.js';
-import type { GenerateRequest } from '../protocol.js';
+import type { AnswerEvent, GenerateRequest } from '../protocol.js';
 import { readGenerationStream } from '../engine/sse.js';
 import { applyPatch } from '../engine/patch.js';
 import type { QueryFetcher } from '../engine/query-client.js';
 
-export type AgentPhase = 'idle' | 'planning' | 'binding' | 'copy' | 'done' | 'error';
+export type AgentPhase =
+  | 'idle'
+  | 'classifying'
+  | 'planning'
+  | 'binding'
+  | 'copy'
+  | 'answering'
+  | 'done'
+  | 'error';
+
+export interface AgentLogEntry {
+  at: number;
+  kind: 'prompt' | 'answer' | 'patch' | 'heal' | 'error' | 'note';
+  text: string;
+  /** Full answer payload for answer cards in the conversation rail. */
+  answer?: AnswerEvent;
+  /** The question that produced an answer — titles a pinned widget. */
+  question?: string;
+  /** True when undo() can revert this entry's patch. */
+  undoable?: boolean;
+}
 
 export interface AgentState {
   spec: DashboardSpec | null;
@@ -15,6 +35,10 @@ export interface AgentState {
   phase: AgentPhase;
   statusMessage: string | null;
   error: string | null;
+  /** Latest ask-mode answer (questions get answers, not dashboards). */
+  answer: AnswerEvent | null;
+  /** Session log feeding the conversation rail. Survives generations. */
+  log: AgentLogEntry[];
 }
 
 const INITIAL: AgentState = {
@@ -24,7 +48,13 @@ const INITIAL: AgentState = {
   phase: 'idle',
   statusMessage: null,
   error: null,
+  answer: null,
+  log: [],
 };
+
+function entry(kind: AgentLogEntry['kind'], text: string, rest?: Partial<AgentLogEntry>) {
+  return { at: Date.now(), kind, text, ...rest };
+}
 
 /**
  * Drives the generation pipeline over SSE and folds the event stream
@@ -32,28 +62,41 @@ const INITIAL: AgentState = {
  * events hydrate slots as parallel binders finish, copy events fade in
  * captions, patch events morph the existing dashboard.
  */
-export function useAlponaAgent(endpoint: string) {
+/** Optional provider of extra request headers (e.g. an auth bearer). */
+export type AuthHeaders = () => Record<string, string>;
+
+export function useAlponaAgent(endpoint: string, authHeaders?: AuthHeaders) {
   const [state, setState] = useState<AgentState>(INITIAL);
   const abortRef = useRef<AbortController | null>(null);
+  // Pre-edit spec snapshots for undo — a stack of dashboards the rail's
+  // "undo" reverts to. Edits (refine, pin) push; undo pops.
+  const undoStackRef = useRef<DashboardSpec[]>([]);
 
   const run = useCallback(
-    async (request: GenerateRequest) => {
+    async (request: GenerateRequest, label?: string) => {
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
 
-      const isRefinement = request.spec !== undefined;
+      const isEdit = request.spec !== undefined;
+      // An edit snapshots the pre-edit spec so the resulting patch is
+      // undoable; a fresh generation clears the redo history.
+      if (isEdit && request.spec) undoStackRef.current.push(request.spec);
+      else undoStackRef.current = [];
+
       setState((prev) => ({
         ...INITIAL,
-        spec: isRefinement ? prev.spec : null,
+        spec: isEdit ? prev.spec : null,
+        // The session log is the conversation — it survives generations.
+        log: [...prev.log, entry('prompt', label ?? request.prompt)],
         phase: 'planning',
-        statusMessage: isRefinement ? 'Refining…' : 'Planning layout…',
+        statusMessage: isEdit ? 'Refining…' : 'Planning layout…',
       }));
 
       try {
         const response = await fetch(`${endpoint}/generate`, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: { 'content-type': 'application/json', ...authHeaders?.() },
           body: JSON.stringify(request),
           signal: controller.signal,
         });
@@ -83,12 +126,30 @@ export function useAlponaAgent(endpoint: string) {
                 const healedIds = event.healed
                   ? new Set(prev.healedIds).add(event.widget.id)
                   : prev.healedIds;
-                return { ...prev, spec: { ...prev.spec, widgets }, pendingInsights, healedIds };
+                const log = event.healed
+                  ? [...prev.log, entry('heal', `${event.widget.id} self-healed`)]
+                  : prev.log;
+                return {
+                  ...prev,
+                  spec: { ...prev.spec, widgets },
+                  pendingInsights,
+                  healedIds,
+                  log,
+                };
               }
               case 'patch': {
                 if (!prev.spec) return prev;
                 try {
-                  return { ...prev, spec: applyPatch(prev.spec, event.operations) };
+                  return {
+                    ...prev,
+                    spec: applyPatch(prev.spec, event.operations),
+                    log: [
+                      ...prev.log,
+                      entry('patch', `${event.operations.length} change(s) applied`, {
+                        undoable: undoStackRef.current.length > 0,
+                      }),
+                    ],
+                  };
                 } catch {
                   return prev; // a bad patch must never break the dashboard
                 }
@@ -102,10 +163,28 @@ export function useAlponaAgent(endpoint: string) {
                 );
                 return { ...prev, spec: { ...prev.spec, widgets } };
               }
+              case 'answer':
+                // Ask mode is terminal: an answer card, not a dashboard.
+                return {
+                  ...prev,
+                  answer: event,
+                  phase: 'done',
+                  statusMessage: null,
+                  log: [
+                    ...prev.log,
+                    entry('answer', event.answer, { answer: event, question: request.prompt }),
+                  ],
+                };
               case 'done':
                 return { ...prev, spec: event.spec, phase: 'done', statusMessage: null };
               case 'error':
-                return { ...prev, phase: 'error', error: event.message, statusMessage: null };
+                return {
+                  ...prev,
+                  phase: 'error',
+                  error: event.message,
+                  statusMessage: null,
+                  log: [...prev.log, entry('error', event.message)],
+                };
             }
           });
         }
@@ -118,7 +197,7 @@ export function useAlponaAgent(endpoint: string) {
         }));
       }
     },
-    [endpoint],
+    [endpoint, authHeaders],
   );
 
   const generate = useCallback((prompt: string) => run({ prompt }), [run]);
@@ -129,6 +208,25 @@ export function useAlponaAgent(endpoint: string) {
     [run],
   );
 
+  /** Pin an ask-mode answer onto the current dashboard as a widget. */
+  const pin = useCallback(
+    (spec: DashboardSpec, pinAnswer: NonNullable<GenerateRequest['pinAnswer']>) =>
+      run({ prompt: 'pin answer', spec, pinAnswer }, `pinned “${pinAnswer.title}”`),
+    [run],
+  );
+
+  /** Revert the last undoable edit, restoring the pre-edit spec. */
+  const undo = useCallback(() => {
+    const previous = undoStackRef.current.pop();
+    if (!previous) return;
+    setState((prev) => ({
+      ...prev,
+      spec: previous,
+      phase: 'done',
+      log: [...prev.log, entry('note', 'reverted the last change')],
+    }));
+  }, []);
+
   const cancel = useCallback(() => {
     abortRef.current?.abort();
     setState((prev) => ({ ...prev, phase: prev.spec ? 'done' : 'idle', statusMessage: null }));
@@ -136,20 +234,23 @@ export function useAlponaAgent(endpoint: string) {
 
   /** Replace the spec wholesale (e.g. loading a saved artifact). */
   const loadSpec = useCallback((spec: DashboardSpec) => {
+    undoStackRef.current = [];
     setState({ ...INITIAL, spec, phase: 'done' });
   }, []);
 
   /** Back to a clean slate (e.g. navigating to the landing page). */
   const reset = useCallback(() => {
     abortRef.current?.abort();
+    undoStackRef.current = [];
     setState(INITIAL);
   }, []);
 
-  return { ...state, generate, refine, cancel, loadSpec, reset };
+  const canUndo = undoStackRef.current.length > 0;
+  return { ...state, generate, refine, pin, undo, canUndo, cancel, loadSpec, reset };
 }
 
 /** Query fetcher hitting the Alpona query service. */
-export function createHttpQueryFetcher(endpoint: string): QueryFetcher {
+export function createHttpQueryFetcher(endpoint: string, authHeaders?: AuthHeaders): QueryFetcher {
   return async (
     sql: string,
     params: Record<string, ParamValue>,
@@ -157,7 +258,7 @@ export function createHttpQueryFetcher(endpoint: string): QueryFetcher {
   ): Promise<QueryResult> => {
     const response = await fetch(`${endpoint}/query`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...authHeaders?.() },
       body: JSON.stringify({ sql, params }),
       signal,
     });

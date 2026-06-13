@@ -3,7 +3,7 @@ import type { DataDictionary } from '@alpona/core';
 /**
  * Suggested prompts for the landing page, derived deterministically from
  * the data dictionary — no LLM call, so they appear instantly, work in
- * mock mode, and automatically adapt to whatever schema `alpona-db
+ * mock mode, and automatically adapt to whatever schema `alpona
  * dictionary` imported. The heuristics mirror what the planner is good
  * at: trends need a date column, breakdowns need a low-cardinality
  * dimension plus a measure, exception lists need a boolean flag.

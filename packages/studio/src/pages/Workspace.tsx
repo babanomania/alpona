@@ -1,24 +1,52 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DashboardSpec, ParamValue } from '@alpona/core';
 import { QueryClient, extractParams, interpret } from '@alpona/core';
+import type { AgentLogEntry } from '@alpona/core/react';
 import { Dashboard, FilterBar, createHttpQueryFetcher, useAlponaAgent } from '@alpona/core/react';
 import {
   ArrowUp,
   Bookmark,
   BookmarkCheck,
+  Code2,
   Download,
   FolderOpen,
+  HelpCircle,
+  LayoutGrid,
   Loader2,
+  MessagesSquare,
   Sparkles,
   Wand2,
   X,
 } from 'lucide-react';
+import { ConversationRail } from '../components/ConversationRail.js';
+import { authFetch, authHeaders } from '../auth.js';
 
 interface SavedDashboard {
   id: string;
   name: string;
   prompt?: string;
   spec: DashboardSpec;
+}
+
+interface Suggestion {
+  text: string;
+  intent: 'ask' | 'build';
+}
+
+/** Turns a question into a short widget title: "what is the revenue for
+ *  Jan?" → "Revenue for Jan". */
+function labelFromQuestion(question?: string): string | undefined {
+  if (!question) return undefined;
+  const stripped = question
+    .trim()
+    .replace(/\?+$/, '')
+    .replace(
+      /^(what(?:'s| is| are)?|how many|how much|show me|which|list|give me|tell me)\s+(the\s+)?/i,
+      '',
+    )
+    .trim();
+  const label = stripped || question.trim().replace(/\?+$/, '');
+  return label ? label.charAt(0).toUpperCase() + label.slice(1, 60) : undefined;
 }
 
 export function Workspace({
@@ -29,24 +57,46 @@ export function Workspace({
   dashboardId: string | null;
   onToast: (message: string) => void;
 }) {
-  const client = useMemo(() => new QueryClient({ fetcher: createHttpQueryFetcher('/api') }), []);
-  const agent = useAlponaAgent('/api');
+  const client = useMemo(
+    () => new QueryClient({ fetcher: createHttpQueryFetcher('/api', authHeaders) }),
+    [],
+  );
+  const agent = useAlponaAgent('/api', authHeaders);
   const { spec } = agent;
 
-  const [input, setInput] = useState('');
+  // Catalog "Ask about this" pre-fills the composer via sessionStorage —
+  // consumed once at mount so it never leaks into a later session.
+  const [input, setInput] = useState(() => {
+    const prefill = sessionStorage.getItem('alpona-prefill');
+    if (prefill) {
+      sessionStorage.removeItem('alpona-prefill');
+      return prefill;
+    }
+    return '';
+  });
   const [paramValues, setParamValues] = useState<Record<string, ParamValue>>({});
   const [selectedWidgetId, setSelectedWidgetId] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [lastPrompt, setLastPrompt] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveOpen, setSaveOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
+  const [railOpen, setRailOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
 
   useEffect(() => {
-    void fetch('/api/suggestions')
+    void authFetch('/api/suggestions')
       .then((r) => (r.ok ? r.json() : null))
-      .then((body: { suggestions?: string[] } | null) => {
-        if (body?.suggestions?.length) setSuggestions(body.suggestions);
+      .then((body: { suggestions?: (string | Suggestion)[] } | null) => {
+        if (!body?.suggestions?.length) return;
+        // Tolerate both the new tagged shape and a bare-string fallback.
+        setSuggestions(
+          body.suggestions.map((s) =>
+            typeof s === 'string'
+              ? { text: s, intent: s.trimEnd().endsWith('?') ? 'ask' : 'build' }
+              : s,
+          ),
+        );
       })
       .catch(() => {});
   }, []);
@@ -55,7 +105,7 @@ export function Workspace({
   // router), so this runs once per board.
   useEffect(() => {
     if (!dashboardId) return;
-    void fetch(`/api/dashboards/${dashboardId}`)
+    void authFetch(`/api/dashboards/${dashboardId}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((saved: SavedDashboard | null) => {
         if (!saved || !interpret(saved.spec).ok) {
@@ -93,10 +143,22 @@ export function Workspace({
     [agent, spec, selectedWidget?.id, busy],
   );
 
+  const pinAnswer = useCallback(
+    (item: AgentLogEntry) => {
+      if (!spec || !item.answer) return;
+      const columns = item.answer.rows.length > 0 ? Object.keys(item.answer.rows[0]!) : ['value'];
+      // Name the pinned widget after the question, not its value — "212"
+      // is a meaningless title on a dashboard.
+      const title = labelFromQuestion(item.question) ?? columns[0] ?? 'Pinned metric';
+      agent.pin(spec, { sql: item.answer.sql, title, columns });
+    },
+    [agent, spec],
+  );
+
   const saveDashboard = useCallback(() => {
     if (!spec) return;
     const name = saveName.trim() || spec.title;
-    void fetch('/api/dashboards', {
+    void authFetch('/api/dashboards', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ name, spec, prompt: lastPrompt ?? undefined }),
@@ -146,21 +208,22 @@ export function Workspace({
   );
 
   // ── Create mode: nothing generated yet ─────────────────────────
-  if (!spec && agent.phase !== 'error' && !busy) {
+  if (!spec && agent.phase !== 'error' && !busy && !agent.answer) {
     return (
       <div className="create">
         <h1>
-          What should your data <em>show you</em>?
+          Ask a question, or <em>describe a view</em>.
         </h1>
         <p className="create__sub">
-          Describe a dashboard — Alpona plans the layout, writes guarded SQL, and draws it live.
+          One box, your data, plain language. A question gets an answer; a description gets a live
+          dashboard — Alpona decides.
         </p>
         <div className="create__box">
           <textarea
             autoFocus
             value={input}
             rows={3}
-            placeholder="e.g. Late shipments by carrier, worst-hit regions, and a KPI for the late rate…"
+            placeholder="How many shipments ran late this week?  ·  Ops view for the warehouse team…"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -178,15 +241,20 @@ export function Workspace({
               disabled={input.trim().length === 0}
               onClick={() => submit(input)}
             >
-              <Wand2 size={15} /> Draw it <ArrowUp size={14} />
+              <Wand2 size={15} /> Go <ArrowUp size={14} />
             </button>
           </div>
         </div>
         <div className="create__suggestions">
           {suggestions.map((s) => (
-            <button key={s} className="example-chip" onClick={() => submit(s)}>
-              <Sparkles size={13} />
-              <span>{s}</span>
+            <button
+              key={s.text}
+              className={`example-chip example-chip--${s.intent}`}
+              onClick={() => submit(s.text)}
+              title={s.intent === 'ask' ? 'a question → an answer' : 'a description → a dashboard'}
+            >
+              {s.intent === 'ask' ? <HelpCircle size={13} /> : <LayoutGrid size={13} />}
+              <span>{s.text}</span>
             </button>
           ))}
         </div>
@@ -204,62 +272,111 @@ export function Workspace({
   }
 
   // ── Viewer / generation mode ───────────────────────────────────
-  return (
-    <div className="workspace">
-      {agent.phase === 'error' && (
-        <div className="alpona-state alpona-state--error" role="alert">
-          <span>Generation failed</span>
-          <span className="alpona-state__hint">{agent.error}</span>
-          <button className="btn btn--ghost" onClick={() => agent.reset()}>
-            Start over
-          </button>
-        </div>
-      )}
+  const focusComposer = () =>
+    document.querySelector<HTMLTextAreaElement>('.composer__bar textarea')?.focus();
 
-      {spec && (
-        <>
-          <div className="dashboard-head">
-            <h2 className="dashboard-title">{spec.title}</h2>
-            <div className="dashboard-head__actions">
-              {paramDescriptors.length > 0 && (
-                <FilterBar
-                  descriptors={paramDescriptors}
-                  values={{ ...spec.params, ...paramValues }}
-                  onChange={(name, value) => setParamValues((prev) => ({ ...prev, [name]: value }))}
-                />
-              )}
-              {agent.phase === 'done' && (
-                <div className="dashboard-head__buttons">
-                  <button
-                    className="icon-btn"
-                    title={savedId ? 'Saved — save a copy' : 'Save & get share link'}
-                    onClick={() => {
-                      setSaveName(spec.title);
-                      setSaveOpen(true);
-                    }}
-                  >
-                    {savedId ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-                  </button>
-                  <button className="icon-btn" title="Download spec JSON" onClick={downloadSpec}>
-                    <Download size={16} />
-                  </button>
-                </div>
-              )}
-            </div>
+  return (
+    <div className={`workspace ${railOpen ? 'workspace--rail' : ''}`}>
+      <div className="workspace__main">
+        {agent.phase === 'error' && (
+          <div className="alpona-state alpona-state--error" role="alert">
+            <span>Generation failed</span>
+            <span className="alpona-state__hint">{agent.error}</span>
+            <button className="btn btn--ghost" onClick={() => agent.reset()}>
+              Start over
+            </button>
           </div>
-          <Dashboard
-            spec={spec}
-            client={client}
-            params={paramValues}
-            pendingInsights={agent.pendingInsights}
-            healedIds={agent.healedIds}
-            selectedWidgetId={selectedWidgetId}
-            onSelectWidget={(id) => setSelectedWidgetId((current) => (current === id ? null : id))}
-          />
-        </>
-      )}
+        )}
+
+        {!spec && agent.answer && agent.phase === 'done' && (
+          <div className="answer-only">
+            <span className="answer-only__eyebrow">
+              <HelpCircle size={14} /> answer
+            </span>
+            {agent.answer.value != null && (
+              <div className="answer-only__value">{String(agent.answer.value)}</div>
+            )}
+            <p className="answer-only__text">{agent.answer.answer}</p>
+            <p className="answer-only__hint">
+              Ask another question, or describe a full dashboard to start building.
+            </p>
+          </div>
+        )}
+
+        {spec && (
+          <>
+            <div className="dashboard-head">
+              <h2 className="dashboard-title">{spec.title}</h2>
+              <div className="dashboard-head__actions">
+                {paramDescriptors.length > 0 && (
+                  <FilterBar
+                    descriptors={paramDescriptors}
+                    values={{ ...spec.params, ...paramValues }}
+                    onChange={(name, value) =>
+                      setParamValues((prev) => ({ ...prev, [name]: value }))
+                    }
+                  />
+                )}
+                {agent.phase === 'done' && (
+                  <div className="dashboard-head__buttons">
+                    <button
+                      className={`icon-btn ${inspectorOpen ? 'icon-btn--on' : ''}`}
+                      title="Inspect the spec JSON"
+                      onClick={() => setInspectorOpen((o) => !o)}
+                    >
+                      <Code2 size={16} />
+                    </button>
+                    <button
+                      className="icon-btn"
+                      title={savedId ? 'Saved — save a copy' : 'Save & get share link'}
+                      onClick={() => {
+                        setSaveName(spec.title);
+                        setSaveOpen(true);
+                      }}
+                    >
+                      {savedId ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                    </button>
+                    <button className="icon-btn" title="Download spec JSON" onClick={downloadSpec}>
+                      <Download size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <Dashboard
+              spec={spec}
+              client={client}
+              params={paramValues}
+              pendingInsights={agent.pendingInsights}
+              healedIds={agent.healedIds}
+              selectedWidgetId={selectedWidgetId}
+              onSelectWidget={(id) =>
+                setSelectedWidgetId((current) => (current === id ? null : id))
+              }
+            />
+            {inspectorOpen && <pre className="spec-inspector">{JSON.stringify(spec, null, 2)}</pre>}
+          </>
+        )}
+      </div>
+
+      <aside className="workspace__rail">
+        <ConversationRail
+          log={agent.log}
+          canPin={Boolean(spec)}
+          onPin={pinAnswer}
+          onUndo={agent.undo}
+          onFollowUp={focusComposer}
+        />
+      </aside>
 
       <footer className="composer">
+        <button
+          className={`composer__rail-toggle ${railOpen ? 'on' : ''}`}
+          title={railOpen ? 'Hide the conversation' : 'Show the conversation'}
+          onClick={() => setRailOpen((o) => !o)}
+        >
+          <MessagesSquare size={15} />
+        </button>
         {busy && (
           <div className="composer__status" role="status">
             <Loader2 size={13} className="composer__spin" />
@@ -282,8 +399,8 @@ export function Workspace({
               spec && agent.phase === 'done'
                 ? selectedWidget
                   ? `Refine “${selectedWidget.copy.title ?? selectedWidget.id}” — e.g. “top 5 only”`
-                  : 'Refine this dashboard, or describe a new one…'
-                : 'Describe the dashboard you need…'
+                  : 'Refine this dashboard, ask a question, or describe a new one…'
+                : 'Ask a question, or describe a view…'
             }
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -301,6 +418,9 @@ export function Workspace({
             {busy ? <Loader2 size={15} className="composer__spin" /> : <Wand2 size={15} />}
           </button>
         </div>
+        <p className="composer__hint">
+          questions get answers · descriptions get widgets — Alpona decides
+        </p>
       </footer>
 
       {saveOpen && spec && (

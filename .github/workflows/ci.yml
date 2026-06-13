@@ -35,13 +35,13 @@ jobs:
 
       - name: Build the example database (no Docker)
         env:
-          ALPONA_DB: duckdb:./examples/supply-chain/db/alpona.duckdb
+          ALPONA_DB: duckdb:./datasets/supply-chain/db/alpona.duckdb
         run: |
-          pnpm alpona-db migrate
-          pnpm alpona-db seed
-          pnpm alpona-db marts
-          pnpm alpona-db dictionary
-          pnpm alpona-db verify
+          pnpm alpona migrate
+          pnpm alpona seed
+          pnpm alpona marts
+          pnpm alpona dictionary
+          pnpm alpona verify
 
       - name: Generate a dashboard through the full pipeline
         env:
@@ -61,4 +61,4 @@ jobs:
           ! grep -q '"type":"error"' /tmp/stream.txt
 
       - name: Build the example app
-        run: pnpm --filter supply-chain-app build
+        run: pnpm --filter alpona-studio build

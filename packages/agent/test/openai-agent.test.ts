@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OpenAiAgent } from '../src/agent/openai.js';
+import { OpenAiAgent } from '../src/backends/openai.js';
 import { testDictionary } from './helpers.js';
 
 interface CapturedRequest {

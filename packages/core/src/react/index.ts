@@ -8,6 +8,7 @@ export {
   createHttpQueryFetcher,
   type AgentState,
   type AgentPhase,
+  type AgentLogEntry,
 } from './useAlponaAgent.js';
 export { widgetComponents, type WidgetRenderProps } from './widgets/index.js';
 export { formatValue, formatAxisValue, toNumber, type ValueFormat } from './format.js';

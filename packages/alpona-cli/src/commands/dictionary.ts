@@ -16,7 +16,9 @@ interface Semantics {
 }
 
 const SAMPLE_CARDINALITY_LIMIT = 50;
-const INTERNAL_TABLES = new Set(['alpona_changelog']);
+// Alpona infrastructure tables are never part of the analytical surface:
+// not in the dictionary, therefore never on the agent's query allowlist.
+const INTERNAL_TABLES = new Set(['alpona_changelog', 'alpona_specs']);
 
 export async function buildDictionary(db: AdminDb, dir: string): Promise<DataDictionary> {
   const schema = db.dialect === 'postgres' ? 'public' : 'main';

@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "supply-chain-app",
+      "name": "alpona-studio",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "supply-chain-app", "dev"],
+      "runtimeArgs": ["--filter", "alpona-studio", "dev"],
       "port": 5173
     },
     {

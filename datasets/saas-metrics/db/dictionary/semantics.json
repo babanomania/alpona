@@ -1,0 +1,52 @@
+{
+  "tables": {
+    "mrr_by_plan": {
+      "description": "Active MRR, accounts, and seats by plan — the first stop for revenue, plan-mix, and expansion questions.",
+      "columns": {
+        "plan": "Subscription tier: starter, team, business, or enterprise",
+        "accounts": "Active (not canceled) accounts on the plan",
+        "seats": "Total licensed seats on the plan",
+        "mrr": "Monthly recurring revenue from active accounts on the plan",
+        "avg_mrr": "MRR divided by active accounts on the plan"
+      }
+    },
+    "churn_risk": {
+      "description": "One row per account with lifetime, MRR, and churn state — the first stop for churn, retention, and at-risk questions.",
+      "columns": {
+        "account": "Account name",
+        "industry": "Account industry vertical",
+        "region": "Account region (Americas, EMEA, APAC, LATAM)",
+        "plan": "Current subscription plan",
+        "mrr": "Monthly recurring revenue for the account",
+        "seats": "Licensed seats",
+        "churned": "1 if the subscription has been canceled, else 0",
+        "lifetime_days": "Days from subscription start to cancellation (or today if active)"
+      }
+    },
+    "feature_adoption": {
+      "description": "Weekly feature usage by region — the first stop for engagement, adoption, and product-usage questions.",
+      "columns": {
+        "week": "Week the usage occurred (Monday-anchored)",
+        "feature": "Product area: dashboards, reports, api, exports, or alerts",
+        "region": "Account region",
+        "active_accounts": "Distinct accounts using the feature that week",
+        "events": "Total usage events that week"
+      }
+    },
+    "accounts": {
+      "description": "Master account list with industry and geography.",
+      "columns": { "created_at": "Date the account was created" }
+    },
+    "subscriptions": {
+      "description": "One subscription per account, with plan, seats, MRR, and churn dates.",
+      "columns": {
+        "mrr": "Monthly recurring revenue",
+        "canceled_at": "Cancellation date; NULL while the subscription is active"
+      }
+    },
+    "usage_events": {
+      "description": "Weekly feature-usage counts per account.",
+      "columns": { "events": "Number of times the feature was used" }
+    }
+  }
+}

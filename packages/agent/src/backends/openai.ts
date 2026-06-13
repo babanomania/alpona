@@ -2,30 +2,40 @@ import OpenAI from 'openai';
 import type { DataDictionary } from '@alpona/core';
 import type {
   AgentBackend,
+  AnswerOutput,
+  AnswerRequest,
   BinderOutput,
   BinderRequest,
+  ClassifyOutput,
   CopyOutput,
   CopyRequest,
   PlannerOutput,
   RefineOutput,
   RefineRequest,
-} from './stages.js';
+} from '../stages.js';
 import {
+  answerOutputSchema,
   binderOutputSchema,
+  classifyOutputSchema,
   copyOutputSchema,
   plannerOutputSchema,
   refineOutputSchema,
-} from './stages.js';
-import { extractJson } from './live.js';
+} from '../stages.js';
+import { extractJson } from '../json.js';
 import {
+  answerSystemPrompt,
+  answerUserPrompt,
+  askSystemPrompt,
+  askUserPrompt,
   binderSystemPrompt,
   binderUserPrompt,
+  classifySystemPrompt,
   copySystemPrompt,
   copyUserPrompt,
   plannerSystemPrompt,
   refineSystemPrompt,
   refineUserPrompt,
-} from './prompts.js';
+} from '../prompts.js';
 
 export interface OpenAiAgentOptions {
   apiKey?: string;
@@ -112,10 +122,20 @@ export class OpenAiAgent implements AgentBackend {
     return extractJson(text);
   }
 
-  async plan(userPrompt: string): Promise<PlannerOutput> {
+  async classify(userPrompt: string): Promise<ClassifyOutput> {
+    const raw = await this.complete({
+      model: this.options.copyModel,
+      system: classifySystemPrompt(),
+      user: userPrompt,
+      maxTokens: 128,
+    });
+    return classifyOutputSchema.parse(raw);
+  }
+
+  async plan(userPrompt: string, dictionary?: DataDictionary): Promise<PlannerOutput> {
     const raw = await this.complete({
       model: this.options.plannerModel,
-      system: plannerSystemPrompt(this.dictionary),
+      system: plannerSystemPrompt(dictionary ?? this.dictionary),
       user: userPrompt,
       maxTokens: 4096,
     });
@@ -123,14 +143,28 @@ export class OpenAiAgent implements AgentBackend {
   }
 
   async bind(request: BinderRequest): Promise<BinderOutput> {
+    const grounding = request.dictionary ?? this.dictionary;
+    const ask = request.intent === 'ask';
     const raw = await this.complete({
       model: this.options.binderModel,
-      system: binderSystemPrompt(this.dictionary, this.options.dialect),
-      user: binderUserPrompt(request),
+      system: ask
+        ? askSystemPrompt(grounding, this.options.dialect)
+        : binderSystemPrompt(grounding, this.options.dialect),
+      user: ask ? askUserPrompt(request.userPrompt, request.feedback) : binderUserPrompt(request),
       maxTokens: 8192,
       thinking: true,
     });
     return binderOutputSchema.parse(raw);
+  }
+
+  async answer(request: AnswerRequest): Promise<AnswerOutput> {
+    const raw = await this.complete({
+      model: this.options.copyModel,
+      system: answerSystemPrompt(),
+      user: answerUserPrompt(request),
+      maxTokens: 512,
+    });
+    return answerOutputSchema.parse(raw);
   }
 
   async copy(request: CopyRequest): Promise<CopyOutput> {

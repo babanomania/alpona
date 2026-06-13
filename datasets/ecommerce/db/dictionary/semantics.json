@@ -1,0 +1,58 @@
+{
+  "tables": {
+    "revenue_trends": {
+      "description": "Weekly revenue, orders, and units by sales channel — the first stop for any trend, growth, or channel-mix question.",
+      "columns": {
+        "week": "Week the orders were placed (Monday-anchored)",
+        "channel": "Sales channel: web, mobile, marketplace, or retail",
+        "orders": "Distinct fulfilled orders that week",
+        "units": "Total units sold that week",
+        "revenue": "Gross merchandise value that week (quantity × unit price)"
+      }
+    },
+    "product_performance": {
+      "description": "One row per product with sales and margin — the first stop for best-seller, category, and profitability questions.",
+      "columns": {
+        "product": "Product name",
+        "category": "Merchandising category (Apparel, Electronics, Home, Beauty, Sports, Toys)",
+        "price": "List price",
+        "units_sold": "Total units sold across fulfilled orders",
+        "revenue": "Gross revenue from the product",
+        "margin": "Gross profit: revenue minus unit cost × units"
+      }
+    },
+    "customer_segments": {
+      "description": "Revenue and order value per customer segment and country — the first stop for segmentation, geography, and AOV questions.",
+      "columns": {
+        "segment": "Customer tier: consumer, pro, business, or enterprise",
+        "country": "Customer's country",
+        "customers": "Distinct customers in the segment/country",
+        "orders": "Distinct fulfilled orders",
+        "revenue": "Gross revenue from the segment/country",
+        "avg_order_value": "Revenue divided by fulfilled orders (AOV)"
+      }
+    },
+    "customers": {
+      "description": "Master customer list with tier and geography.",
+      "columns": {
+        "segment": "Customer tier: consumer, pro, business, or enterprise",
+        "signup_date": "Date the customer first registered"
+      }
+    },
+    "products": {
+      "description": "Product catalog with price and cost.",
+      "columns": { "cost": "Unit cost, for margin calculations" }
+    },
+    "orders": {
+      "description": "Order headers; line items live in order_items.",
+      "columns": {
+        "channel": "Sales channel the order came through",
+        "status": "fulfilled, cancelled, or returned"
+      }
+    },
+    "order_items": {
+      "description": "Order line items: one row per product per order.",
+      "columns": { "unit_price": "Price paid per unit on this line" }
+    }
+  }
+}

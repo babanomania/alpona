@@ -11,6 +11,7 @@ import {
   Trash2,
   Wand2,
 } from 'lucide-react';
+import { authFetch } from '../auth.js';
 
 interface DashboardSummary {
   id: string;
@@ -27,7 +28,7 @@ export function Explore({ onToast }: { onToast: (message: string) => void }) {
   const [loaded, setLoaded] = useState(false);
 
   const refresh = () => {
-    void fetch('/api/dashboards')
+    void authFetch('/api/dashboards')
       .then((r) => (r.ok ? r.json() : null))
       .then((body: { dashboards?: DashboardSummary[] } | null) => {
         if (body?.dashboards) setRows(body.dashboards);
@@ -58,7 +59,7 @@ export function Explore({ onToast }: { onToast: (message: string) => void }) {
 
   const remove = (row: DashboardSummary) => {
     if (!window.confirm(`Delete “${row.name}”? The share link will stop working.`)) return;
-    void fetch(`/api/dashboards/${row.id}`, { method: 'DELETE' })
+    void authFetch(`/api/dashboards/${row.id}`, { method: 'DELETE' })
       .then((r) => {
         if (r.ok) {
           onToast(`Deleted “${row.name}”`);

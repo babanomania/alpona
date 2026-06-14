@@ -1,0 +1,21 @@
+{
+  "name": "@alpona/videos",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Regenerable demo videos: Playwright drives the studio against the deterministic mock agent.",
+  "scripts": {
+    "seed": "tsx scripts/seed.ts",
+    "record": "pnpm seed && playwright test",
+    "record:headed": "pnpm seed && playwright test --headed",
+    "record:docker": "playwright test --config playwright.docker.config.ts",
+    "assemble": "tsx scripts/assemble.ts",
+    "vo": "tsx scripts/voiceover.ts",
+    "cover:bg": "tsx scripts/capture-hero.ts",
+    "all": "pnpm record && pnpm assemble"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "tsx": "^4.22.4"
+  }
+}

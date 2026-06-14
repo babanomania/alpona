@@ -16,6 +16,8 @@ export interface DashboardProps {
   healedIds?: ReadonlySet<string>;
   selectedWidgetId?: string | null;
   onSelectWidget?: (widgetId: string) => void;
+  /** Remove a widget from the dashboard (a × on the selected widget). */
+  onRemoveWidget?: (widgetId: string) => void;
 }
 
 /**
@@ -32,6 +34,7 @@ export function Dashboard({
   healedIds,
   selectedWidgetId,
   onSelectWidget,
+  onRemoveWidget,
 }: DashboardProps) {
   const result = useMemo(() => interpret(spec), [spec]);
   const flipRef = useFlip(result.ok ? result.dashboard.composition : null);
@@ -73,6 +76,7 @@ export function Dashboard({
             selectable={Boolean(onSelectWidget)}
             selected={selectedWidgetId === widget.id}
             onSelect={onSelectWidget}
+            onRemove={onRemoveWidget}
             flipRef={flipRef(widget.id)}
             style={{
               gridColumn: `${placement.x + 1} / span ${placement.w}`,

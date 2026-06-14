@@ -354,6 +354,10 @@ export function Workspace({
               onSelectWidget={(id) =>
                 setSelectedWidgetId((current) => (current === id ? null : id))
               }
+              onRemoveWidget={(id) => {
+                agent.removeWidget(id);
+                setSelectedWidgetId((current) => (current === id ? null : current));
+              }}
             />
             {inspectorOpen && <pre className="spec-inspector">{JSON.stringify(spec, null, 2)}</pre>}
           </>

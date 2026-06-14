@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400;0,9..144,560&family=Outfit:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --night: #160e14;
+        --ivory: #f2e4c9;
+        --ivory-dim: #cdbfa6;
+        --marigold: #e8a44a;
+        --terra: #c96a4a;
+        --plum: #8a2f4f;
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: var(--night);
+        color: var(--ivory);
+        font-family: 'Outfit', system-ui, sans-serif;
+      }
+      .stage {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background:
+          radial-gradient(900px 620px at 50% 46%, rgba(232, 164, 74, 0.14), transparent 70%),
+          radial-gradient(1200px 800px at 50% -20%, rgba(138, 47, 79, 0.2), transparent 70%),
+          var(--night);
+      }
+      .glyph {
+        font-family: 'Fraunces', serif;
+        font-size: 40px;
+        color: var(--marigold);
+        margin-bottom: 18px;
+      }
+      h1 {
+        font-family: 'Fraunces', serif;
+        font-weight: 560;
+        font-size: 88px;
+        line-height: 1.04;
+        letter-spacing: -0.012em;
+        text-align: center;
+      }
+      h1 em {
+        font-style: italic;
+        font-weight: 400;
+        color: var(--marigold);
+      }
+      .cmd {
+        margin-top: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 22px 30px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 23px;
+      }
+      .cmd .line {
+        color: var(--ivory);
+      }
+      .cmd .line .p {
+        color: var(--terra);
+      }
+      .repo {
+        margin-top: 34px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 24px;
+        letter-spacing: 0.02em;
+        color: var(--marigold);
+      }
+      .foot {
+        margin-top: 16px;
+        font-size: 17px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(205, 191, 166, 0.7);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="glyph">আলপনা</div>
+      <h1>Draw your <em>own</em>.</h1>
+      <div class="cmd">
+        <span class="line"><span class="p">$</span> pnpm install</span>
+        <span class="line"><span class="p">$</span> pnpm alpona init</span>
+        <span class="line"><span class="p">$</span> pnpm dev</span>
+      </div>
+      <div class="repo">github.com/babanomania/alpona</div>
+      <div class="foot">open source · apache-2.0 · self-hosted</div>
+    </div>
+  </body>
+</html>

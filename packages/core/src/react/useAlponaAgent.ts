@@ -215,6 +215,27 @@ export function useAlponaAgent(endpoint: string, authHeaders?: AuthHeaders) {
     [run],
   );
 
+  /**
+   * Remove a widget from the dashboard. Pure-code spec surgery — the
+   * composer frees the slot on re-interpret — so it never calls the model.
+   * Undoable, like any edit.
+   */
+  const removeWidget = useCallback((widgetId: string) => {
+    setState((prev) => {
+      if (!prev.spec) return prev;
+      const widget = prev.spec.widgets.find((w) => w.id === widgetId);
+      if (!widget) return prev;
+      undoStackRef.current.push(prev.spec);
+      const widgets = prev.spec.widgets.filter((w) => w.id !== widgetId);
+      const label = widget.copy.title ?? widgetId;
+      return {
+        ...prev,
+        spec: { ...prev.spec, widgets },
+        log: [...prev.log, entry('patch', `removed “${label}”`, { undoable: true })],
+      };
+    });
+  }, []);
+
   /** Revert the last undoable edit, restoring the pre-edit spec. */
   const undo = useCallback(() => {
     const previous = undoStackRef.current.pop();
@@ -246,7 +267,7 @@ export function useAlponaAgent(endpoint: string, authHeaders?: AuthHeaders) {
   }, []);
 
   const canUndo = undoStackRef.current.length > 0;
-  return { ...state, generate, refine, pin, undo, canUndo, cancel, loadSpec, reset };
+  return { ...state, generate, refine, pin, removeWidget, undo, canUndo, cancel, loadSpec, reset };
 }
 
 /** Query fetcher hitting the Alpona query service. */

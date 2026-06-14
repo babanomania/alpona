@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,400;0,9..144,560&family=Outfit:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --night: #160e14;
+        --ivory: #f2e4c9;
+        --ivory-dim: #cdbfa6;
+        --marigold: #e8a44a;
+        --terra: #c96a4a;
+        --plum: #8a2f4f;
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: var(--night);
+        color: var(--ivory);
+        font-family: 'Outfit', system-ui, sans-serif;
+      }
+      .stage {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      /* The captured website particle-alpona field. */
+      .herobg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: var(--night) center / cover no-repeat;
+      }
+      /* Vignette + glow so the title stays legible over the particles. */
+      .scrim {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+          radial-gradient(760px 540px at 50% 46%, rgba(232, 164, 74, 0.1), transparent 66%),
+          radial-gradient(820px 600px at 50% 48%, rgba(22, 14, 20, 0.34), rgba(22, 14, 20, 0.82) 80%);
+      }
+      .content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .eyebrow {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 15px;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+        color: var(--marigold);
+        margin-bottom: 26px;
+      }
+      .wordmark {
+        font-family: 'Fraunces', serif;
+        font-weight: 560;
+        font-size: 138px;
+        letter-spacing: -0.015em;
+        line-height: 1;
+        text-shadow: 0 4px 40px rgba(0, 0, 0, 0.55);
+      }
+      .tagline {
+        margin-top: 24px;
+        font-size: 27px;
+        color: var(--ivory-dim);
+        text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+      }
+      .tagline em {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        color: var(--marigold);
+      }
+      .bn {
+        margin-top: 30px;
+        font-family: 'Fraunces', serif;
+        font-size: 30px;
+        color: rgba(242, 228, 201, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="herobg" id="herobg"></div>
+      <div class="scrim"></div>
+      <div class="content">
+        <span class="eyebrow">schema-driven generative UI</span>
+        <h1 class="wordmark">Alpona</h1>
+        <p class="tagline">Dashboards drawn from a <em>sentence</em>.</p>
+        <p class="bn">আলপনা</p>
+      </div>
+    </div>
+    <script>
+      // ?bg=<file-url> points at the captured website particle field.
+      const bg = new URLSearchParams(location.search).get('bg');
+      if (bg) document.getElementById('herobg').style.backgroundImage = `url('${bg}')`;
+    </script>
+  </body>
+</html>

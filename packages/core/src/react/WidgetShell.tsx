@@ -14,6 +14,8 @@ interface WidgetShellProps {
   selectable?: boolean;
   selected?: boolean;
   onSelect?: (widgetId: string) => void;
+  /** Remove this widget from the dashboard (a × shown when selected). */
+  onRemove?: (widgetId: string) => void;
   style?: CSSProperties;
   flipRef?: (el: HTMLDivElement | null) => void;
 }
@@ -67,7 +69,7 @@ function Body({ widget, client, params, pendingInsight }: WidgetShellProps): Rea
 }
 
 export function WidgetShell(props: WidgetShellProps) {
-  const { widget, healed, selectable, selected, onSelect, style, flipRef } = props;
+  const { widget, healed, selectable, selected, onSelect, onRemove, style, flipRef } = props;
   const title = widget.copy.title;
   const caption = widget.copy.caption;
 
@@ -77,10 +79,25 @@ export function WidgetShell(props: WidgetShellProps) {
       className="alpona-widget alpona-widget--flip"
       style={style}
       data-widget-id={widget.id}
+      data-widget-type={widget.type}
       data-selectable={selectable ? 'true' : undefined}
       data-selected={selected ? 'true' : undefined}
       onClick={selectable ? () => onSelect?.(widget.id) : undefined}
     >
+      {selected && onRemove && (
+        <button
+          type="button"
+          className="alpona-widget__remove"
+          aria-label="Remove widget"
+          title="Remove from dashboard"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(widget.id);
+          }}
+        >
+          ✕
+        </button>
+      )}
       {(title || caption) && (
         <div className="alpona-widget__header">
           {title && <div className="alpona-widget__title">{title}</div>}

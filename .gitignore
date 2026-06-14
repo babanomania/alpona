@@ -26,6 +26,11 @@ datasets/*/reports/starter-*.json
 .cache/
 coverage/
 
+# demo-video harness: recordings, traces, seeded db (mp4s in website/public are committed)
+videos/.cache/
+videos/playwright-report/
+videos/test-results/
+
 # editor / OS
 .DS_Store
 .idea/

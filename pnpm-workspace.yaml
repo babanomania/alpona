@@ -1,6 +1,7 @@
 packages:
   - packages/*
   - website
+  - videos
 allowBuilds:
   esbuild: true
   sharp: true

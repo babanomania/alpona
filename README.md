@@ -52,6 +52,14 @@ docker compose -f docker-compose.yml -f docker-compose.auth.yml up
 
 Users are admin-provisioned (no public signup) with `alpona user add`. Bring your own data any time with `alpona connect <db-url>`. Full setup — keys, secrets, datasets — is in the [deploy docs](https://babanomania.github.io/alpona/getting-started/deploy-supabase).
 
+### Open the app and try:
+
+> _"Supplier scorecard for this quarter — lead time trends, PO value by supplier, and flag anyone averaging more than 3 days late."_
+
+Then click any widget and refine it: _"top 5 only"_, _"make this weekly"_, _"add a target line at 95%"_. Refinements arrive as RFC 6902 JSON Patches — widgets slide to their new positions; nothing regenerates that didn't change.
+
+Try asking the dashboard, "Show me the fastest supplier this quarter." The answer appears as a widget on the conversation sidebar, which you can pin to the dashboard.
+
 ## How it works
 
 Alpona splits the work by what each part is good at — and the agent can only fail in ways the system catches:

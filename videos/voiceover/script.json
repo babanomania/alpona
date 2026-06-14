@@ -1,0 +1,26 @@
+{
+  "_comment": "Marketing voiceover keyed by the on-screen caption (matched loosely, so it stays aligned even if the live agent skips a beat). Each value is the punchy line spoken at that beat's timestamp.",
+  "map": {
+    "Alpona — dashboards drawn from a sentence.": "This is Alpona — it turns a single sentence into a full dashboard.",
+    "A schema-driven generative UI engine for dashboards.": "No templates. No backlog. No SQL by hand.",
+    "One box. Ask a question, or describe a whole view.": "One box. Ask a question, or describe an entire view.",
+    "Plain language in — a live, data-bound dashboard out.": "Watch — plain English goes in…",
+    "Alpona picks the layout, widgets, and the SQL for each.": "…and a live, data-bound dashboard comes out. Layout, widgets, queries — all of it.",
+    "Every widget is bound to agent-generated, sandboxed SQL.": "Every chart runs real, sandboxed SQL. Nothing faked, nothing hardcoded.",
+    "Refine a single widget — just say what you want.": "Don't like a widget? Just tell it what to do.",
+    "Only that widget changes — the rest stay put.": "Top five only — done. That one changes, the rest hold.",
+    "Talk to a chart the way you would a teammate.": "Talk to any chart like it's your analyst.",
+    "A reference line, added in plain English.": "Add a target line at ninety-five percent — instantly.",
+    "Ask a question instead of describing a view…": "Need a hard number? Skip the chart. Just ask.",
+    "A question gets an answer — with its SQL shown.": "You get the answer — and the exact query behind it.",
+    "The answer appears in the conversation, query and all.": "It drops straight into the conversation.",
+    "Read the exact query Alpona ran — nothing hidden.": "Total transparency — every query, right there.",
+    "Don't need a tile? Select it…": "Don't need a tile? Clear it out.",
+    "…and one click removes it. The layout re-flows.": "One click — gone, and the board re-flows.",
+    "Like the answer? Pin it onto the board as a widget.": "Love an answer? Pin it straight onto the board.",
+    "The answer becomes a permanent, data-bound widget.": "And there's your metric — front and center.",
+    "Save it — the spec persists and you get a share link.": "Save it — portable spec, instant share link.",
+    "Every saved board is a portable spec with a share URL.": "Versioned. Governed. Completely yours.",
+    "One place for every dashboard your team has drawn.": "Self-serve analytics that actually ships. This is Alpona."
+  }
+}

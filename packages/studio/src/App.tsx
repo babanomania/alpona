@@ -4,7 +4,6 @@ import { Landing } from './pages/Landing.js';
 import { Workspace } from './pages/Workspace.js';
 import { Explore } from './pages/Explore.js';
 import { Catalog } from './pages/Catalog.js';
-import { Docs } from './pages/Docs.js';
 import { Login } from './pages/Login.js';
 import { authFetch, clearToken, fetchAuthInfo, getToken, type AuthInfo } from './auth.js';
 
@@ -19,8 +18,10 @@ type Route =
   | { page: 'create' }
   | { page: 'explore' }
   | { page: 'catalog' }
-  | { page: 'docs' }
   | { page: 'viewer'; id: string };
+
+// Documentation lives in the Starlight site, not the studio.
+const DOCS_URL = 'https://babanomania.github.io/alpona';
 
 function parseRoute(): Route {
   const hash = window.location.hash;
@@ -29,7 +30,6 @@ function parseRoute(): Route {
   if (hash.startsWith('#/create')) return { page: 'create' };
   if (hash.startsWith('#/explore')) return { page: 'explore' };
   if (hash.startsWith('#/catalog')) return { page: 'catalog' };
-  if (hash.startsWith('#/docs')) return { page: 'docs' };
   return { page: 'landing' };
 }
 
@@ -131,7 +131,7 @@ export function App() {
           <a href="#/explore" className={route.page === 'explore' ? 'active' : ''}>
             <Compass size={14} /> Explore
           </a>
-          <a href="#/docs" className={route.page === 'docs' ? 'active' : ''}>
+          <a href={DOCS_URL} target="_blank" rel="noopener noreferrer">
             <BookOpen size={14} /> Docs
           </a>
         </nav>
@@ -180,7 +180,6 @@ export function App() {
         {route.page === 'landing' && <Landing suggestionCount={suggestionCount} />}
         {route.page === 'explore' && <Explore onToast={showToast} />}
         {route.page === 'catalog' && <Catalog />}
-        {route.page === 'docs' && <Docs onToast={showToast} />}
         {(route.page === 'create' || route.page === 'viewer') && (
           <Workspace
             // Remount on route change: a fresh create surface or a fresh

@@ -1,0 +1,60 @@
+{
+  "name": "Supplier reliability",
+  "prompt": "Supplier reliability: reliability score by supplier, average delivery delay by supplier, and the least reliable suppliers.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Supplier reliability",
+    "layout": "deep-dive@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "avg-delay-by-supplier",
+        "slot": "hero",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  supplier AS supplier,\n  ROUND(AVG(delay_days), 1) AS avg_delay_days\nFROM shipment_performance\nWHERE delay_days IS NOT NULL\nGROUP BY 1\nORDER BY avg_delay_days DESC, supplier\nLIMIT 10;",
+          "resultShape": {
+            "x": "supplier",
+            "y": "avg_delay_days"
+          }
+        },
+        "copy": {
+          "title": "Delivery delay by supplier",
+          "caption": "Sakura Precision averages the longest delay at 0.8 days, while Meridian Components and Rhein Metallwerk are on time."
+        }
+      },
+      {
+        "id": "supplier-reliability-rank",
+        "slot": "breakdowns",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT\n  name AS supplier_name,\n  reliability_score AS reliability_score\nFROM suppliers\nORDER BY reliability_score DESC, supplier_name ASC\nLIMIT 10",
+          "resultShape": {
+            "label": "supplier_name",
+            "value": "reliability_score"
+          }
+        },
+        "copy": {
+          "title": "Supplier reliability scores",
+          "caption": "Sakura Precision leads at 97.1, while Gulf Plastics trails at 71.9."
+        }
+      },
+      {
+        "id": "least-reliable-suppliers",
+        "slot": "breakdowns",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT\n  name AS supplier,\n  reliability_score AS reliability_score\nFROM suppliers\nORDER BY reliability_score ASC, name ASC\nLIMIT 10;",
+          "resultShape": {
+            "label": "supplier",
+            "value": "reliability_score"
+          }
+        },
+        "copy": {
+          "title": "Lowest reliability scores",
+          "caption": "Gulf Plastics is least reliable at 71.9, and scores rise steadily to 97.1 for Sakura Precision."
+        }
+      }
+    ]
+  }
+}

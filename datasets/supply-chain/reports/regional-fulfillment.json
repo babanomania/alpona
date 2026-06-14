@@ -1,0 +1,63 @@
+{
+  "name": "Regional fulfillment",
+  "prompt": "Regional fulfillment: on-time delivery rate by region, shipment volume by region, and average delay days by region.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Regional fulfillment",
+    "layout": "chart-grid@1",
+    "params": {
+      "start_date": "2024-01-01",
+      "end_date": "2024-12-31"
+    },
+    "widgets": [
+      {
+        "id": "on-time-rate-by-region",
+        "slot": "charts",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  region,\n  ROUND(100.0 * AVG(CASE WHEN is_late THEN 0 ELSE 1 END), 1) AS on_time_rate\nFROM shipment_performance\nWHERE status = 'delivered'\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)\nGROUP BY region\nORDER BY on_time_rate DESC, region",
+          "resultShape": {
+            "x": "region",
+            "y": "on_time_rate"
+          }
+        },
+        "copy": {
+          "title": "On-time delivery by region",
+          "caption": "No shipment performance records were found for the selected period."
+        }
+      },
+      {
+        "id": "shipment-volume-by-region",
+        "slot": "charts",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT region AS region, COUNT(shipment_id) AS shipment_volume\nFROM shipment_performance\nWHERE dispatched BETWEEN CAST({{params.start_date}} AS DATE) AND CAST({{params.end_date}} AS DATE)\nGROUP BY region\nORDER BY shipment_volume DESC, region",
+          "resultShape": {
+            "x": "region",
+            "y": "shipment_volume"
+          }
+        },
+        "copy": {
+          "title": "Regional shipment volume",
+          "caption": "No shipments were recorded in the selected date range."
+        }
+      },
+      {
+        "id": "avg-delay-by-region",
+        "slot": "charts",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT region AS region, ROUND(AVG(delay_days), 1) AS avg_delay_days\nFROM shipment_performance\nWHERE delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)\n  AND delay_days IS NOT NULL\nGROUP BY region\nORDER BY avg_delay_days DESC, region",
+          "resultShape": {
+            "x": "region",
+            "y": "avg_delay_days"
+          }
+        },
+        "copy": {
+          "title": "Delay by region",
+          "caption": "No shipment delay data is available for the selected date range."
+        }
+      }
+    ]
+  }
+}

@@ -149,17 +149,27 @@ export async function init(options: InitOptions): Promise<InitResult> {
 
   const aliasesEnriched = await enrichAliases(dictionaryPath, log);
 
-  // Starter specs land in the pack's reports/ dir; the server seeds the
-  // gallery from there on boot.
-  const dictionary = JSON.parse(readFileSync(dictionaryPath, 'utf8')) as DataDictionary;
-  const starters = await generateStarterSpecs(dictionary);
+  // The server seeds the gallery from the pack's reports/ dir on boot. A pack
+  // that ships a curated gallery (any non-"starter-" report) is used as-is;
+  // otherwise we generate a starter set with the mock agent for coverage.
   const reportsDir = join(datasetDir, '..', 'reports');
   mkdirSync(reportsDir, { recursive: true });
-  for (const starter of starters) {
-    const layout = starter.spec.layout.split('@')[0];
-    writeFileSync(join(reportsDir, `starter-${layout}.json`), JSON.stringify(starter, null, 2));
+  const curated = readdirSync(reportsDir).filter(
+    (f) => f.endsWith('.json') && !f.startsWith('starter-'),
+  );
+  let starterCount = curated.length;
+  if (curated.length > 0) {
+    log(`  ▦ ${curated.length} curated reports (pack gallery) → ${relative(options.root, reportsDir)}`);
+  } else {
+    const dictionary = JSON.parse(readFileSync(dictionaryPath, 'utf8')) as DataDictionary;
+    const starters = await generateStarterSpecs(dictionary);
+    for (const starter of starters) {
+      const layout = starter.spec.layout.split('@')[0];
+      writeFileSync(join(reportsDir, `starter-${layout}.json`), JSON.stringify(starter, null, 2));
+    }
+    starterCount = starters.length;
+    log(`  ▦ ${starters.length} starter specs → ${relative(options.root, reportsDir)}`);
   }
-  log(`  ▦ ${starters.length} starter specs → ${relative(options.root, reportsDir)}`);
 
   // A .env only when none exists — never clobber configuration.
   const envPath = join(options.root, '.env');
@@ -183,7 +193,7 @@ export async function init(options: InitOptions): Promise<InitResult> {
   return {
     datasetDir,
     dictionaryPath,
-    starterSpecs: starters.length,
+    starterSpecs: starterCount,
     aliasesEnriched,
     envWritten,
   };

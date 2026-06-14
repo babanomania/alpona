@@ -1,0 +1,91 @@
+{
+  "name": "Operations overview",
+  "prompt": "Operations overview scorecard: overall on-time delivery rate, average delay days, number of SKUs below reorder point, average warehouse utilization, and the monthly on-time delivery trend.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Operations overview",
+    "layout": "kpi-overview@1",
+    "params": {
+      "start_date": "2025-01-01",
+      "end_date": "2026-06-14"
+    },
+    "widgets": [
+      {
+        "id": "on-time-delivery-rate",
+        "slot": "kpis",
+        "type": "gauge",
+        "binding": {
+          "sql": "SELECT COALESCE(ROUND(100.0 * AVG(CASE WHEN delivered <= promised THEN 1.0 ELSE 0.0 END), 1), 0) AS on_time_rate\nFROM shipment_performance\nWHERE status = 'delivered'\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)",
+          "resultShape": {
+            "value": "on_time_rate"
+          }
+        },
+        "copy": {
+          "title": "On-time delivery rate",
+          "caption": "66.5% of shipments arrived on or before the promised date."
+        }
+      },
+      {
+        "id": "avg-delay-days",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(AVG(delay_days), 2) AS avg_delay_days\nFROM shipment_performance\nWHERE status = 'delivered'\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)",
+          "resultShape": {
+            "value": "avg_delay_days"
+          }
+        },
+        "copy": {
+          "title": "Average delay days",
+          "caption": "Delivered shipments averaged 0.38 delay days, so arrivals were nearly on time."
+        }
+      },
+      {
+        "id": "skus-below-reorder",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(DISTINCT sku) AS skus_below_reorder FROM stock_risk WHERE below_reorder = TRUE",
+          "resultShape": {
+            "value": "skus_below_reorder"
+          }
+        },
+        "copy": {
+          "title": "SKUs below reorder",
+          "caption": "24 distinct SKUs were below their reorder point."
+        }
+      },
+      {
+        "id": "avg-warehouse-utilization",
+        "slot": "kpis",
+        "type": "gauge",
+        "binding": {
+          "sql": "SELECT ROUND(AVG(utilization_pct), 1) AS avg_utilization_pct FROM warehouse_utilization",
+          "resultShape": {
+            "value": "avg_utilization_pct"
+          }
+        },
+        "copy": {
+          "title": "Average warehouse utilization",
+          "caption": "Warehouses are operating at 22.6% average utilization."
+        }
+      },
+      {
+        "id": "monthly-on-time-trend",
+        "slot": "trend",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT date_trunc('month', delivered) AS delivered_month, ROUND(100.0 * AVG(CASE WHEN is_late = FALSE THEN 1.0 ELSE 0.0 END), 1) AS on_time_rate FROM shipment_performance WHERE delivered IS NOT NULL AND delivered >= CAST({{params.start_date}} AS DATE) AND delivered <= CAST({{params.end_date}} AS DATE) GROUP BY 1 ORDER BY 1",
+          "resultShape": {
+            "x": "delivered_month",
+            "y": "on_time_rate"
+          }
+        },
+        "copy": {
+          "title": "On-time delivery trend",
+          "caption": "On-time delivery fell from 78.4% to 57.7% over the period, with only a brief rebound in April."
+        }
+      }
+    ]
+  }
+}

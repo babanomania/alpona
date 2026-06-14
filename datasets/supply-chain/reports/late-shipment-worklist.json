@@ -1,0 +1,72 @@
+{
+  "name": "Late shipment worklist",
+  "prompt": "Late shipment worklist: a table of the most delayed delivered shipments with carrier, supplier and region, plus late rate by carrier.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Late shipment worklist",
+    "layout": "table-first@1",
+    "params": {
+      "start_date": "2026-05-15",
+      "end_date": "2026-06-14"
+    },
+    "widgets": [
+      {
+        "id": "late-delivered-count",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(*) AS late_delivered_count\nFROM shipment_performance\nWHERE status = 'delivered'\n  AND is_late = TRUE\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)",
+          "resultShape": {
+            "value": "late_delivered_count"
+          }
+        },
+        "copy": {
+          "title": "Late deliveries count",
+          "caption": "42 shipments were delivered late in the selected date range."
+        }
+      },
+      {
+        "id": "most-delayed-shipments",
+        "slot": "worklist",
+        "type": "table",
+        "binding": {
+          "sql": "WITH delivered_shipments AS (\n  SELECT\n    shipment_id,\n    carrier,\n    supplier,\n    region,\n    dispatched,\n    promised,\n    delivered,\n    delay_days,\n    order_value,\n    is_late\n  FROM shipment_performance\n  WHERE status = 'delivered'\n    AND delivered >= CAST({{params.start_date}} AS DATE)\n    AND delivered <= CAST({{params.end_date}} AS DATE)\n),\ncarrier_rates AS (\n  SELECT\n    carrier,\n    ROUND(100.0 * AVG(CASE WHEN is_late THEN 1.0 ELSE 0.0 END), 1) AS carrier_late_rate_pct\n  FROM delivered_shipments\n  GROUP BY carrier\n)\nSELECT\n  d.shipment_id AS shipment_id,\n  d.carrier AS carrier,\n  d.supplier AS supplier,\n  d.region AS region,\n  d.dispatched AS dispatched,\n  d.promised AS promised,\n  d.delivered AS delivered,\n  d.delay_days AS delay_days,\n  ROUND(d.order_value, 2) AS order_value,\n  c.carrier_late_rate_pct AS carrier_late_rate_pct\nFROM delivered_shipments d\nJOIN carrier_rates c USING (carrier)\nWHERE d.is_late = TRUE\nORDER BY d.delay_days DESC, d.order_value DESC, d.delivered DESC\nLIMIT 50",
+          "resultShape": {
+            "columns": [
+              "shipment_id",
+              "carrier",
+              "supplier",
+              "region",
+              "dispatched",
+              "promised",
+              "delivered",
+              "delay_days",
+              "order_value",
+              "carrier_late_rate_pct"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Most delayed delivered shipments",
+          "caption": "Delayed deliveries are clustered in Europe and all top delays come from DB Schenker, running 7–9 days late."
+        }
+      },
+      {
+        "id": "late-rate-by-carrier",
+        "slot": "summary",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT\n  carrier AS carrier,\n  ROUND(100.0 * AVG(CASE WHEN is_late THEN 1 ELSE 0 END), 1) AS late_rate\nFROM shipment_performance\nWHERE status = 'delivered'\n  AND delivered >= CAST({{params.start_date}} AS DATE)\n  AND delivered <= CAST({{params.end_date}} AS DATE)\nGROUP BY carrier\nORDER BY late_rate DESC, carrier\nLIMIT 10",
+          "resultShape": {
+            "label": "carrier",
+            "value": "late_rate"
+          }
+        },
+        "copy": {
+          "title": "Late rate by carrier",
+          "caption": "DB Schenker has the highest late rate at 79.2%, while DHL and FedEx show none."
+        }
+      }
+    ]
+  }
+}

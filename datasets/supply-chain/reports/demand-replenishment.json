@@ -1,0 +1,89 @@
+{
+  "name": "Demand & replenishment",
+  "prompt": "Demand and replenishment: weekly demand trend by category, total units demanded by warehouse, and products below their reorder point.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Demand & replenishment",
+    "layout": "deep-dive@1",
+    "params": {
+      "start_date": "2025-01-01",
+      "end_date": "2025-12-31"
+    },
+    "widgets": [
+      {
+        "id": "weekly-demand-by-category",
+        "slot": "hero",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT\n  CAST(date_trunc('week', dh.week) AS DATE) AS week,\n  p.category AS category,\n  SUM(dh.units) AS demand_units\nFROM demand_history AS dh\nJOIN products AS p\n  ON dh.product_id = p.id\nWHERE dh.week >= CAST({{params.start_date}} AS DATE)\n  AND dh.week <= CAST({{params.end_date}} AS DATE)\nGROUP BY 1, 2\nORDER BY week, category",
+          "resultShape": {
+            "x": "week",
+            "y": "demand_units",
+            "series": "category"
+          }
+        },
+        "copy": {
+          "title": "Weekly demand by category",
+          "caption": "No demand records fall within the selected date range."
+        }
+      },
+      {
+        "id": "demand-by-warehouse",
+        "slot": "breakdowns",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  w.code AS warehouse,\n  SUM(dh.units) AS total_units\nFROM demand_history AS dh\nJOIN warehouses AS w\n  ON dh.warehouse_id = w.id\nWHERE dh.week >= CAST({{params.start_date}} AS DATE)\n  AND dh.week <= CAST({{params.end_date}} AS DATE)\nGROUP BY w.code\nORDER BY total_units DESC, warehouse\nLIMIT 10",
+          "resultShape": {
+            "x": "warehouse",
+            "y": "total_units"
+          }
+        },
+        "copy": {
+          "title": "Demand by warehouse",
+          "caption": "No demand records were found for the selected date range."
+        }
+      },
+      {
+        "id": "demand-share-by-category",
+        "slot": "breakdowns",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT\n  p.category AS category,\n  SUM(dh.units) AS demand_units\nFROM demand_history AS dh\nJOIN products AS p\n  ON p.id = dh.product_id\nWHERE dh.week >= CAST({{params.start_date}} AS DATE)\n  AND dh.week <= CAST({{params.end_date}} AS DATE)\nGROUP BY 1\nORDER BY demand_units DESC, category\nLIMIT 8",
+          "resultShape": {
+            "label": "category",
+            "value": "demand_units"
+          }
+        },
+        "copy": {
+          "title": "Demand by category",
+          "caption": "No demand data is available for the selected date range."
+        }
+      },
+      {
+        "id": "below-reorder-products",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT\n  sku,\n  product,\n  category,\n  warehouse,\n  region,\n  on_hand,\n  reorder_point,\n  reorder_point - on_hand AS stock_shortfall,\n  below_reorder\nFROM stock_risk\nWHERE below_reorder = TRUE\nORDER BY stock_shortfall DESC, on_hand ASC, sku\nLIMIT 50",
+          "resultShape": {
+            "columns": [
+              "sku",
+              "product",
+              "category",
+              "warehouse",
+              "region",
+              "on_hand",
+              "reorder_point",
+              "stock_shortfall",
+              "below_reorder"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Biggest stock gaps",
+          "caption": "Corrugated Box L is 752 units below reorder point, the largest shortfall in the list."
+        }
+      }
+    ]
+  }
+}

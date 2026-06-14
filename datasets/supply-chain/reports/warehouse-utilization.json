@@ -1,0 +1,111 @@
+{
+  "name": "Warehouse utilization",
+  "prompt": "Warehouse capacity and utilization: utilization rate by warehouse, units stored versus capacity, and which warehouses are closest to full.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Warehouse utilization",
+    "layout": "ops-monitor@2",
+    "params": {},
+    "widgets": [
+      {
+        "id": "utilization-rate",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(AVG(utilization_pct), 1) AS avg_utilization_pct FROM warehouse_utilization",
+          "resultShape": {
+            "value": "avg_utilization_pct"
+          }
+        },
+        "copy": {
+          "title": "Average utilization",
+          "caption": "Average warehouse utilization is 22.6%, indicating most capacity remains unused."
+        }
+      },
+      {
+        "id": "stored-units",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(units_stored) AS total_units_stored\nFROM warehouse_utilization",
+          "resultShape": {
+            "value": "total_units_stored"
+          }
+        },
+        "copy": {
+          "title": "Total units stored",
+          "caption": "Warehouses currently store 44,428 units in total."
+        }
+      },
+      {
+        "id": "capacity-units",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(capacity_units) AS total_capacity_units FROM warehouse_utilization",
+          "resultShape": {
+            "value": "total_capacity_units"
+          }
+        },
+        "copy": {
+          "title": "Total warehouse capacity",
+          "caption": "All warehouses combined provide 209,000 capacity units."
+        }
+      },
+      {
+        "id": "near-full-warehouses",
+        "slot": "hero",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  warehouse AS warehouse,\n  utilization_pct AS utilization_pct\nFROM warehouse_utilization\nORDER BY utilization_pct DESC, warehouse",
+          "resultShape": {
+            "x": "warehouse",
+            "y": "utilization_pct"
+          }
+        },
+        "copy": {
+          "title": "Utilization by warehouse",
+          "caption": "GDL-1 is most utilized at 34.9%, while every warehouse stays below 35% of capacity."
+        }
+      },
+      {
+        "id": "stored-by-region",
+        "slot": "side",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT region AS region, SUM(units_stored) AS units_stored\nFROM warehouse_utilization\nGROUP BY region\nORDER BY units_stored DESC",
+          "resultShape": {
+            "label": "region",
+            "value": "units_stored"
+          }
+        },
+        "copy": {
+          "title": "Stored units by region",
+          "caption": "Latin America holds the most stock (~9.8k units) and runs hottest at 34.9% utilization; Europe carries the least load at 15.4%."
+        }
+      },
+      {
+        "id": "warehouse-capacity-detail",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT warehouse AS warehouse, city AS city, region AS region, units_stored AS units_stored, capacity_units AS capacity_units, utilization_pct AS utilization_pct FROM warehouse_utilization ORDER BY utilization_pct DESC, warehouse LIMIT 50",
+          "resultShape": {
+            "columns": [
+              "warehouse",
+              "city",
+              "region",
+              "units_stored",
+              "capacity_units",
+              "utilization_pct"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Warehouses by utilization",
+          "caption": "GDL-1 is most utilized at 34.9%; all other warehouses are below 23%."
+        }
+      }
+    ]
+  }
+}

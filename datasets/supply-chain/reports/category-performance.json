@@ -1,0 +1,125 @@
+{
+  "name": "Category performance",
+  "prompt": "Compare product categories side by side: order value by category on one side and late delivery rate by category on the other, with category KPIs and a detail table of category metrics.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Category performance",
+    "layout": "comparison@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "total-order-value",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COALESCE(SUM(order_value), 0) AS total_order_value FROM shipment_performance",
+          "resultShape": {
+            "value": "total_order_value"
+          }
+        },
+        "copy": {
+          "title": "Total Order Value",
+          "caption": null
+        }
+      },
+      {
+        "id": "overall-late-rate",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COALESCE(ROUND(100.0 * AVG(CASE WHEN is_late THEN 1.0 ELSE 0.0 END), 1), 0.0) AS late_rate FROM shipment_performance WHERE status = 'delivered'",
+          "resultShape": {
+            "value": "late_rate"
+          }
+        },
+        "copy": {
+          "title": "Overall Late Delivery Rate",
+          "caption": null
+        }
+      },
+      {
+        "id": "late-shipments",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(*) AS late_shipments FROM shipment_performance WHERE is_late = TRUE",
+          "resultShape": {
+            "value": "late_shipments"
+          }
+        },
+        "copy": {
+          "title": "Late Shipments",
+          "caption": null
+        }
+      },
+      {
+        "id": "category-count",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(DISTINCT category) AS category_count FROM shipment_performance",
+          "resultShape": {
+            "value": "category_count"
+          }
+        },
+        "copy": {
+          "title": "Distinct Categories",
+          "caption": null
+        }
+      },
+      {
+        "id": "order-value-by-category",
+        "slot": "left",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  category AS category,\n  SUM(order_value) AS total_order_value\nFROM shipment_performance\nGROUP BY 1\nORDER BY total_order_value DESC\nLIMIT 10",
+          "resultShape": {
+            "x": "category",
+            "y": "total_order_value"
+          }
+        },
+        "copy": {
+          "title": "Order Value by Category",
+          "caption": null
+        }
+      },
+      {
+        "id": "late-rate-by-category",
+        "slot": "right",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT\n  category,\n  ROUND(100.0 * AVG(CASE WHEN is_late THEN 1.0 ELSE 0.0 END), 1) AS late_rate_pct\nFROM shipment_performance\nWHERE status = 'delivered'\nGROUP BY 1\nORDER BY late_rate_pct DESC, category\nLIMIT 10",
+          "resultShape": {
+            "x": "category",
+            "y": "late_rate_pct"
+          }
+        },
+        "copy": {
+          "title": "Late Rate by Category",
+          "caption": null
+        }
+      },
+      {
+        "id": "category-metrics-detail",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT\n  category,\n  ROUND(SUM(order_value), 2) AS total_order_value,\n  COUNT(*) FILTER (WHERE status = 'delivered' AND is_late) AS late_shipment_count,\n  COUNT(*) FILTER (WHERE status = 'delivered') AS delivered_shipment_count,\n  ROUND(\n    100.0 * COUNT(*) FILTER (WHERE status = 'delivered' AND is_late)\n    / NULLIF(COUNT(*) FILTER (WHERE status = 'delivered'), 0),\n    1\n  ) AS late_rate_pct\nFROM shipment_performance\nGROUP BY category\nORDER BY late_rate_pct DESC NULLS LAST, total_order_value DESC\nLIMIT 50",
+          "resultShape": {
+            "columns": [
+              "category",
+              "total_order_value",
+              "late_shipment_count",
+              "delivered_shipment_count",
+              "late_rate_pct"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Category Shipment Metrics",
+          "caption": null
+        }
+      }
+    ]
+  }
+}

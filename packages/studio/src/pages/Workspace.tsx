@@ -146,10 +146,21 @@ export function Workspace({
   const pinAnswer = useCallback(
     (item: AgentLogEntry) => {
       if (!spec || !item.answer) return;
-      const columns = item.answer.rows.length > 0 ? Object.keys(item.answer.rows[0]!) : ['value'];
+      const rows = item.answer.rows;
+      const allColumns = rows.length > 0 ? Object.keys(rows[0]!) : ['value'];
       // Name the pinned widget after the question, not its value — "212"
       // is a meaningless title on a dashboard.
-      const title = labelFromQuestion(item.question) ?? columns[0] ?? 'Pinned metric';
+      const title = labelFromQuestion(item.question) ?? allColumns[0] ?? 'Pinned metric';
+      // A single-row answer pins as a KPI that actually shows its headline
+      // value: hand pin() just the column holding that value, so it picks
+      // kpi_card and the metric renders (not a blank or a one-bar leaderboard).
+      let columns = allColumns;
+      const headline = item.answer.value;
+      if (rows.length === 1 && headline != null) {
+        const valueCol =
+          allColumns.find((c) => String(rows[0]![c]) === String(headline)) ?? allColumns[0]!;
+        columns = [valueCol];
+      }
       agent.pin(spec, { sql: item.answer.sql, title, columns });
     },
     [agent, spec],

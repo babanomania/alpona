@@ -57,20 +57,39 @@ async function firstVisible(page: Page, selectors: string[]): Promise<Locator | 
   return null;
 }
 
-/** The right-most widget in the dashboard's top row (by geometry). */
-async function topRowRightWidget(page: Page): Promise<Locator | null> {
+/**
+ * Pick a widget that's safe to remove for the demo: the right-most one in a
+ * row that holds at least two widgets (so removal never empties a row and
+ * leaves a lopsided dashboard), preferring a KPI tile so the pinned answer —
+ * also a KPI — lands cleanly in its place. Returns null if every row is a
+ * single widget (then we skip the removal beat entirely).
+ */
+async function removableWidget(page: Page): Promise<Locator | null> {
   const widgets = page.locator('.alpona-widget');
   const n = await widgets.count();
-  const boxes: { i: number; x: number; y: number; h: number }[] = [];
+  const boxes: { i: number; x: number; y: number; h: number; type: string | null }[] = [];
   for (let i = 0; i < n; i++) {
     const b = await widgets.nth(i).boundingBox();
-    if (b) boxes.push({ i, x: b.x, y: b.y, h: b.height });
+    const type = await widgets.nth(i).getAttribute('data-widget-type');
+    if (b) boxes.push({ i, x: b.x, y: b.y, h: b.height, type });
   }
   if (boxes.length === 0) return null;
-  const minY = Math.min(...boxes.map((b) => b.y));
-  const topRow = boxes.filter((b) => b.y < minY + b.h * 0.5);
-  topRow.sort((a, b) => b.x - a.x); // right-most first
-  return widgets.nth(topRow[0]!.i);
+  // Cluster into rows by vertical position.
+  boxes.sort((a, b) => a.y - b.y);
+  const rows: { y: number; items: typeof boxes }[] = [];
+  for (const b of boxes) {
+    const row = rows.find((r) => Math.abs(r.y - b.y) < b.h * 0.6);
+    if (row) row.items.push(b);
+    else rows.push({ y: b.y, items: [b] });
+  }
+  const multi = rows.filter((r) => r.items.length >= 2);
+  if (multi.length === 0) return null; // never empty a row
+  // Prefer a row that has a KPI; remove the right-most KPI (else right-most).
+  const row = multi.find((r) => r.items.some((it) => it.type === 'kpi_card')) ?? multi[0]!;
+  const kpis = row.items.filter((it) => it.type === 'kpi_card');
+  const pool = kpis.length ? kpis : row.items;
+  pool.sort((a, b) => b.x - a.x);
+  return widgets.nth(pool[0]!.i);
 }
 
 /** Select a widget by clicking its top edge (away from chart tooltips). */
@@ -189,9 +208,9 @@ test('alpona product walkthrough', async ({ page }) => {
     await page.waitForTimeout(1100);
   }
 
-  // ── Beat 9 · remove the top-row, right-most widget ─────────────
-  // Frees a prominent slot so the pinned answer lands in plain sight.
-  const victim = await topRowRightWidget(page);
+  // ── Beat 9 · remove a widget (never emptying a row) ────────────
+  // Frees a KPI slot so the pinned answer lands cleanly in plain sight.
+  const victim = await removableWidget(page);
   if (victim && (await victim.isVisible().catch(() => false))) {
     await beat(page, 'Don’t need a tile? Select it…', 3000);
     await selectWidget(page, victim);

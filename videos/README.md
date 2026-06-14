@@ -20,7 +20,7 @@ muxes `voiceover.mp3` over the video (offset past the cover).
 
 ```bash
 export ELEVENLABS_API_KEY=sk_…
-export ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM   # optional — defaults to "Rachel"
+export ELEVENLABS_VOICE_ID=N9rZ3GaL6nwOrNUEMppm   # optional — defaults to "Rudra"
 pnpm --filter @alpona/videos record:docker        # produces timing.json
 pnpm --filter @alpona/videos vo                    # → .cache/vo/voiceover.mp3
 pnpm --filter @alpona/videos assemble              # final mp4 now has narration

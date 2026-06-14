@@ -12,8 +12,8 @@ const voDir = resolve(cache, 'vo');
 const clipsDir = resolve(voDir, 'clips');
 
 const KEY = process.env.ELEVENLABS_API_KEY;
-// Defaults to ElevenLabs' "Rachel" preset; override with any voice id.
-const VOICE = process.env.ELEVENLABS_VOICE_ID ?? '21m00Tcm4TlvDq8ikWAM';
+// Defaults to ElevenLabs' "Rudra" preset; override with any voice id.
+const VOICE = process.env.ELEVENLABS_VOICE_ID ?? 'N9rZ3GaL6nwOrNUEMppm';
 const MODEL = process.env.ELEVENLABS_MODEL ?? 'eleven_multilingual_v2';
 // Faster, punchier delivery for the marketing cut. speed 0.7–1.2.
 const SPEED = Number(process.env.ELEVENLABS_SPEED ?? '1.12');
@@ -97,19 +97,47 @@ async function main() {
     clips.push({ mp3, at: line.at });
   }
 
-  // Lay each clip at its recorded timestamp over a silent base the length of
-  // the recording, then mix down to a single track.
-  const durSec = (timing.durationMs / 1000).toFixed(3);
+  // Schedule non-overlapping starts: each clip begins at its beat timestamp,
+  // or when the previous clip finishes (+ a small gap), whichever is later —
+  // so a long line never talks over the next. Tight clusters slip slightly;
+  // the wide gaps between phases reset any accumulated drift.
+  const GAP_MS = 150;
+  const clipMs = (f: string) =>
+    Math.round(
+      parseFloat(
+        execFileSync('ffprobe', [
+          '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nk=1:nw=1', f,
+        ])
+          .toString()
+          .trim(),
+      ) * 1000,
+    );
+  let cursor = 0;
+  let maxEnd = 0;
+  const scheduled = clips.map((c) => {
+    const dur = clipMs(c.mp3);
+    const start = Math.max(c.at, cursor);
+    if (start - c.at > 400) {
+      console.log(`  …slipped ${((start - c.at) / 1000).toFixed(1)}s to avoid overlap`);
+    }
+    cursor = start + dur + GAP_MS;
+    maxEnd = Math.max(maxEnd, start + dur);
+    return { mp3: c.mp3, at: start };
+  });
+
+  // Base silence at least as long as the recording (extend if narration runs a
+  // touch past it — that simply overlaps the end card, which is harmless).
+  const durSec = (Math.max(timing.durationMs, maxEnd + 200) / 1000).toFixed(3);
   const inputs: string[] = ['-f', 'lavfi', '-t', durSec, '-i', 'anullsrc=r=44100:cl=stereo'];
-  for (const c of clips) inputs.push('-i', c.mp3);
-  const filters = clips.map(
+  for (const c of scheduled) inputs.push('-i', c.mp3);
+  const filters = scheduled.map(
     (c, i) =>
       `[${i + 1}:a]aresample=44100,aformat=channel_layouts=stereo,adelay=${c.at}|${c.at}[a${i}]`,
   );
-  const mixLabels = clips.map((_, i) => `[a${i}]`).join('');
+  const mixLabels = scheduled.map((_, i) => `[a${i}]`).join('');
   const graph =
     `${filters.join(';')};[0:a]${mixLabels}` +
-    `amix=inputs=${clips.length + 1}:normalize=0:dropout_transition=0[out]`;
+    `amix=inputs=${scheduled.length + 1}:normalize=0:dropout_transition=0[out]`;
   const outMp3 = resolve(voDir, 'voiceover.mp3');
   execFileSync(
     'ffmpeg',

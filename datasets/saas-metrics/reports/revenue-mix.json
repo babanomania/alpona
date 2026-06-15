@@ -1,0 +1,92 @@
+{
+  "name": "Revenue mix",
+  "prompt": "Revenue mix: MRR by industry, region and plan, plus seats and accounts across the book.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Revenue mix",
+    "layout": "two-tier@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "mrr-industry",
+        "slot": "hero",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT industry AS industry, ROUND(SUM(mrr),0) AS mrr FROM churn_risk GROUP BY industry ORDER BY mrr DESC",
+          "resultShape": {
+            "x": "industry",
+            "y": "mrr"
+          }
+        },
+        "copy": {
+          "title": "MRR by industry",
+          "caption": "Fintech leads MRR, but the five industries sit within about $13K of one another."
+        }
+      },
+      {
+        "id": "mrr-region",
+        "slot": "side",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT region AS region, ROUND(SUM(mrr),0) AS mrr FROM churn_risk GROUP BY region ORDER BY mrr DESC",
+          "resultShape": {
+            "label": "region",
+            "value": "mrr"
+          }
+        },
+        "copy": {
+          "title": "MRR by region",
+          "caption": "The four regions each contribute close to a quarter of total MRR."
+        }
+      },
+      {
+        "id": "mrr-plan-rank",
+        "slot": "side",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT plan AS plan, ROUND(mrr,0) AS mrr FROM mrr_by_plan ORDER BY mrr DESC",
+          "resultShape": {
+            "label": "plan",
+            "value": "mrr"
+          }
+        },
+        "copy": {
+          "title": "MRR by plan",
+          "caption": "Plan revenue is tightly clustered, led narrowly by Starter."
+        }
+      },
+      {
+        "id": "seats-region",
+        "slot": "secondary",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT region AS region, SUM(seats) AS seats FROM churn_risk GROUP BY region ORDER BY seats DESC",
+          "resultShape": {
+            "x": "region",
+            "y": "seats"
+          }
+        },
+        "copy": {
+          "title": "Seats by region",
+          "caption": "Seat distribution mirrors revenue — balanced across regions."
+        }
+      },
+      {
+        "id": "accts-industry",
+        "slot": "secondary",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT industry AS industry, COUNT(*) AS accounts FROM churn_risk GROUP BY industry ORDER BY accounts DESC",
+          "resultShape": {
+            "x": "industry",
+            "y": "accounts"
+          }
+        },
+        "copy": {
+          "title": "Accounts by industry",
+          "caption": "Each industry holds 120 accounts — an evenly diversified book."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "name": "MRR overview",
+  "prompt": "MRR overview: new MRR added by month, headline MRR and account KPIs, and the split by plan and industry.",
+  "spec": {
+    "specVersion": 1,
+    "title": "MRR overview",
+    "layout": "exec-summary@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "new-mrr",
+        "slot": "hero",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT date_trunc('month', started_at) AS month, ROUND(SUM(mrr),0) AS mrr FROM subscriptions GROUP BY 1 ORDER BY 1",
+          "resultShape": {
+            "x": "month",
+            "y": "mrr"
+          }
+        },
+        "copy": {
+          "title": "New MRR added by month",
+          "caption": "New monthly recurring revenue has grown steadily from about $33K a month in early 2024."
+        }
+      },
+      {
+        "id": "kpi-mrr",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(mrr),0) AS mrr FROM churn_risk",
+          "resultShape": {
+            "value": "mrr"
+          }
+        },
+        "copy": {
+          "title": "Total MRR",
+          "caption": "$735K in monthly recurring revenue across 600 accounts."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-accounts",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(*) AS accounts FROM churn_risk",
+          "resultShape": {
+            "value": "accounts"
+          }
+        },
+        "copy": {
+          "title": "Accounts",
+          "caption": "600 active accounts under contract."
+        }
+      },
+      {
+        "id": "kpi-avg",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(mrr)/NULLIF(COUNT(*),0),0) AS avg_mrr FROM churn_risk",
+          "resultShape": {
+            "value": "avg_mrr"
+          }
+        },
+        "copy": {
+          "title": "Avg MRR / account",
+          "caption": "About $1,225 of MRR per account."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-seats",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(seats) AS seats FROM churn_risk",
+          "resultShape": {
+            "value": "seats"
+          }
+        },
+        "copy": {
+          "title": "Seats",
+          "caption": "62,700 seats provisioned."
+        }
+      },
+      {
+        "id": "mrr-by-plan",
+        "slot": "supporting",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT plan AS plan, ROUND(mrr,0) AS mrr FROM mrr_by_plan ORDER BY mrr DESC",
+          "resultShape": {
+            "x": "plan",
+            "y": "mrr"
+          }
+        },
+        "copy": {
+          "title": "MRR by plan",
+          "caption": "Revenue is split almost evenly across the four plans — none clears $160K."
+        }
+      },
+      {
+        "id": "accts-by-industry",
+        "slot": "supporting",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT industry AS industry, COUNT(*) AS accounts FROM churn_risk GROUP BY industry ORDER BY accounts DESC",
+          "resultShape": {
+            "label": "industry",
+            "value": "accounts"
+          }
+        },
+        "copy": {
+          "title": "Accounts by industry",
+          "caption": "Accounts are spread evenly across five industries."
+        }
+      }
+    ]
+  }
+}

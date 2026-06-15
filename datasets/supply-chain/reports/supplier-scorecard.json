@@ -6,8 +6,8 @@
     "title": "Supplier scorecard",
     "layout": "ops-monitor@2",
     "params": {
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "start_date": "2000-01-01",
+      "end_date": "2100-01-01"
     },
     "widgets": [
       {
@@ -95,7 +95,11 @@
         "binding": {
           "sql": "SELECT supplier AS supplier, COUNT(*) AS shipment_count, ROUND(AVG(delay_days), 1) AS avg_delay_days FROM shipment_performance WHERE delivered >= CAST({{params.start_date}} AS DATE) AND delivered <= CAST({{params.end_date}} AS DATE) AND delay_days IS NOT NULL GROUP BY supplier HAVING AVG(delay_days) > 3 ORDER BY avg_delay_days DESC, shipment_count DESC LIMIT 50",
           "resultShape": {
-            "columns": ["supplier", "shipment_count", "avg_delay_days"]
+            "columns": [
+              "supplier",
+              "shipment_count",
+              "avg_delay_days"
+            ]
           }
         },
         "copy": {

@@ -6,8 +6,8 @@
     "title": "Carrier performance: delays, late rates, and worst-hit regions",
     "layout": "deep-dive@1",
     "params": {
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "start_date": "2000-01-01",
+      "end_date": "2100-01-01"
     },
     "widgets": [
       {

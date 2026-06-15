@@ -1,0 +1,127 @@
+{
+  "name": "Revenue overview",
+  "prompt": "Revenue overview: weekly revenue by channel, headline revenue and order KPIs, and the top channels and categories.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Revenue overview",
+    "layout": "exec-summary@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "weekly-revenue",
+        "slot": "hero",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT week AS week, channel AS channel, ROUND(SUM(revenue),0) AS revenue FROM revenue_trends GROUP BY week, channel ORDER BY week, channel",
+          "resultShape": {
+            "x": "week",
+            "y": "revenue",
+            "series": "channel"
+          }
+        },
+        "copy": {
+          "title": "Weekly revenue by channel",
+          "caption": "Web leads revenue almost every week, with retail close behind and mobile a distant fourth."
+        }
+      },
+      {
+        "id": "kpi-revenue",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(revenue),0) AS revenue FROM revenue_trends",
+          "resultShape": {
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Total revenue",
+          "caption": "$3.6M across all channels over the last 53 weeks."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-orders",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(orders) AS orders FROM revenue_trends",
+          "resultShape": {
+            "value": "orders"
+          }
+        },
+        "copy": {
+          "title": "Orders",
+          "caption": "5,102 orders placed in the period."
+        }
+      },
+      {
+        "id": "kpi-aov",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(revenue)/NULLIF(SUM(orders),0),2) AS aov FROM revenue_trends",
+          "resultShape": {
+            "value": "aov"
+          }
+        },
+        "copy": {
+          "title": "Avg order value",
+          "caption": "Customers spend about $705 per order."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-units",
+        "slot": "highlights",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(units) AS units FROM revenue_trends",
+          "resultShape": {
+            "value": "units"
+          }
+        },
+        "copy": {
+          "title": "Units sold",
+          "caption": "27,642 units shipped over the period."
+        }
+      },
+      {
+        "id": "rev-by-channel",
+        "slot": "supporting",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT channel AS channel, ROUND(SUM(revenue),0) AS revenue FROM revenue_trends GROUP BY channel ORDER BY revenue DESC",
+          "resultShape": {
+            "x": "channel",
+            "y": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Revenue by channel",
+          "caption": "Web ($1.44M) and retail ($1.08M) drive roughly two-thirds of revenue."
+        }
+      },
+      {
+        "id": "top-categories",
+        "slot": "supporting",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT category AS category, ROUND(SUM(revenue),0) AS revenue FROM product_performance GROUP BY category ORDER BY revenue DESC",
+          "resultShape": {
+            "label": "category",
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Top categories",
+          "caption": "Home and Sports lead the catalog; Electronics trails despite premium pricing."
+        }
+      }
+    ]
+  }
+}

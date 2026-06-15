@@ -1,0 +1,116 @@
+{
+  "name": "Customer segments",
+  "prompt": "Compare customer segments: revenue and orders by segment, segment KPIs, and a segment detail table.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Customer segments",
+    "layout": "comparison@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "kpi-customers",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(customers) AS customers FROM customer_segments",
+          "resultShape": {
+            "value": "customers"
+          }
+        },
+        "copy": {
+          "title": "Customers",
+          "caption": "500 customers across four segments."
+        }
+      },
+      {
+        "id": "kpi-revenue",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(revenue),0) AS revenue FROM customer_segments",
+          "resultShape": {
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Revenue",
+          "caption": "$3.6M in segment revenue."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-aov",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(revenue)/NULLIF(SUM(orders),0),2) AS aov FROM customer_segments",
+          "resultShape": {
+            "value": "aov"
+          }
+        },
+        "copy": {
+          "title": "Avg order value",
+          "caption": "$705 blended across segments."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "rev-by-segment",
+        "slot": "left",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT segment AS segment, ROUND(SUM(revenue),0) AS revenue FROM customer_segments GROUP BY segment ORDER BY revenue DESC",
+          "resultShape": {
+            "x": "segment",
+            "y": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Revenue by segment",
+          "caption": "Pro accounts generate $1.44M — four times the business segment — despite equal customer counts."
+        }
+      },
+      {
+        "id": "orders-by-segment",
+        "slot": "right",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT segment AS segment, SUM(orders) AS orders FROM customer_segments GROUP BY segment ORDER BY orders DESC",
+          "resultShape": {
+            "x": "segment",
+            "y": "orders"
+          }
+        },
+        "copy": {
+          "title": "Orders by segment",
+          "caption": "Order counts are nearly identical across segments — the gap is in order value, not frequency."
+        }
+      },
+      {
+        "id": "segment-detail",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT segment AS segment, SUM(customers) AS customers, SUM(orders) AS orders, ROUND(SUM(revenue),0) AS revenue, ROUND(SUM(revenue)/NULLIF(SUM(orders),0),0) AS avg_order_value FROM customer_segments GROUP BY segment ORDER BY revenue DESC",
+          "resultShape": {
+            "columns": [
+              "segment",
+              "customers",
+              "orders",
+              "revenue",
+              "avg_order_value"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Segment detail",
+          "caption": "Pro and consumer segments lead on value per order; business trails at $279."
+        }
+      }
+    ]
+  }
+}

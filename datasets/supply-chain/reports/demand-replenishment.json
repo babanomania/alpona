@@ -6,8 +6,8 @@
     "title": "Demand & replenishment",
     "layout": "deep-dive@1",
     "params": {
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "start_date": "2000-01-01",
+      "end_date": "2100-01-01"
     },
     "widgets": [
       {
@@ -24,7 +24,7 @@
         },
         "copy": {
           "title": "Weekly demand by category",
-          "caption": "No demand records fall within the selected date range."
+          "caption": "Packaging dominates weekly demand, running well ahead of Bearings and Fasteners."
         }
       },
       {
@@ -40,7 +40,7 @@
         },
         "copy": {
           "title": "Demand by warehouse",
-          "caption": "No demand records were found for the selected date range."
+          "caption": "Demand is spread almost evenly across the five warehouses — each handles about 34,000 units."
         }
       },
       {
@@ -56,7 +56,7 @@
         },
         "copy": {
           "title": "Demand by category",
-          "caption": "No demand data is available for the selected date range."
+          "caption": "Packaging and Bearings together make up over half of all unit demand."
         }
       },
       {

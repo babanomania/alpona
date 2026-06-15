@@ -1,0 +1,98 @@
+{
+  "name": "Churn risk",
+  "prompt": "Churn risk: MRR at risk by industry, churned accounts by region and plan, and the list of churned accounts.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Churn risk",
+    "layout": "deep-dive@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "at-risk-industry",
+        "slot": "hero",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT industry AS industry, ROUND(SUM(CASE WHEN churned THEN mrr ELSE 0 END),0) AS at_risk_mrr FROM churn_risk GROUP BY industry ORDER BY at_risk_mrr DESC",
+          "resultShape": {
+            "x": "industry",
+            "y": "at_risk_mrr"
+          }
+        },
+        "copy": {
+          "title": "MRR lost to churn by industry",
+          "caption": "Fintech and Retail account for the most churned MRR, though every industry lost 17 accounts."
+        }
+      },
+      {
+        "id": "churn-region",
+        "slot": "breakdowns",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT region AS region, SUM(CASE WHEN churned THEN 1 ELSE 0 END) AS churned FROM churn_risk GROUP BY region ORDER BY churned DESC",
+          "resultShape": {
+            "label": "region",
+            "value": "churned"
+          }
+        },
+        "copy": {
+          "title": "Churned accounts by region",
+          "caption": "Churn is remarkably even — each region lost 21 or 22 accounts."
+        }
+      },
+      {
+        "id": "churn-plan",
+        "slot": "breakdowns",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT plan AS plan, SUM(CASE WHEN churned THEN 1 ELSE 0 END) AS churned FROM churn_risk GROUP BY plan ORDER BY churned DESC",
+          "resultShape": {
+            "x": "plan",
+            "y": "churned"
+          }
+        },
+        "copy": {
+          "title": "Churned accounts by plan",
+          "caption": "No single plan is a churn outlier — losses track plan size."
+        }
+      },
+      {
+        "id": "churn-industry-donut",
+        "slot": "breakdowns",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT industry AS industry, SUM(CASE WHEN churned THEN 1 ELSE 0 END) AS churned FROM churn_risk GROUP BY industry ORDER BY churned DESC",
+          "resultShape": {
+            "label": "industry",
+            "value": "churned"
+          }
+        },
+        "copy": {
+          "title": "Churn share by industry",
+          "caption": "The 85 churned accounts are evenly distributed across industries."
+        }
+      },
+      {
+        "id": "churned-table",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT account AS account, industry AS industry, region AS region, plan AS plan, ROUND(mrr,0) AS mrr, lifetime_days AS lifetime_days FROM churn_risk WHERE churned ORDER BY mrr DESC LIMIT 50",
+          "resultShape": {
+            "columns": [
+              "account",
+              "industry",
+              "region",
+              "plan",
+              "mrr",
+              "lifetime_days"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Churned accounts",
+          "caption": "Every churned account, ranked by the monthly revenue it took with it."
+        }
+      }
+    ]
+  }
+}

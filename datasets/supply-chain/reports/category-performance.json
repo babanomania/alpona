@@ -18,8 +18,8 @@
           }
         },
         "copy": {
-          "title": "Total Order Value",
-          "caption": null
+          "title": "Total order value",
+          "caption": "$4.8M in shipped order value across eight categories."
         }
       },
       {
@@ -33,8 +33,8 @@
           }
         },
         "copy": {
-          "title": "Overall Late Delivery Rate",
-          "caption": null
+          "title": "Late delivery rate",
+          "caption": "32.3% of shipments arrived late overall."
         }
       },
       {
@@ -48,8 +48,8 @@
           }
         },
         "copy": {
-          "title": "Late Shipments",
-          "caption": null
+          "title": "Late shipments",
+          "caption": "271 shipments missed their promised date."
         }
       },
       {
@@ -63,8 +63,8 @@
           }
         },
         "copy": {
-          "title": "Distinct Categories",
-          "caption": null
+          "title": "Categories",
+          "caption": "Eight product categories shipped in the period."
         }
       },
       {
@@ -79,8 +79,8 @@
           }
         },
         "copy": {
-          "title": "Order Value by Category",
-          "caption": null
+          "title": "Order value by category",
+          "caption": "Electronics leads at $762K, with Metals and Bearings close behind."
         }
       },
       {
@@ -95,8 +95,8 @@
           }
         },
         "copy": {
-          "title": "Late Rate by Category",
-          "caption": null
+          "title": "Late rate by category",
+          "caption": "Chemicals and Packaging are the worst performers — both late 51% of the time."
         }
       },
       {
@@ -116,8 +116,8 @@
           }
         },
         "copy": {
-          "title": "Category Shipment Metrics",
-          "caption": null
+          "title": "Category shipment metrics",
+          "caption": "Order value, delivered counts and late rate for every category."
         }
       }
     ]

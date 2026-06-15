@@ -1,0 +1,116 @@
+{
+  "name": "Revenue by country",
+  "prompt": "Revenue by country: a ranked table of countries, headline KPIs, and the top countries and segment split.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Revenue by country",
+    "layout": "table-first@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "kpi-countries",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(DISTINCT country) AS countries FROM customer_segments",
+          "resultShape": {
+            "value": "countries"
+          }
+        },
+        "copy": {
+          "title": "Countries",
+          "caption": "Selling into 6 countries."
+        }
+      },
+      {
+        "id": "kpi-revenue",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(revenue),0) AS revenue FROM customer_segments",
+          "resultShape": {
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Total revenue",
+          "caption": "$3.6M worldwide."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-top-country",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(MAX(c.rev),0) AS top FROM (SELECT country, SUM(revenue) AS rev FROM customer_segments GROUP BY country) c",
+          "resultShape": {
+            "value": "top"
+          }
+        },
+        "copy": {
+          "title": "Top country revenue",
+          "caption": "The UK leads at about $734K."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "country-table",
+        "slot": "worklist",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT country AS country, SUM(customers) AS customers, SUM(orders) AS orders, ROUND(SUM(revenue),0) AS revenue, ROUND(SUM(revenue)/NULLIF(SUM(orders),0),0) AS avg_order_value FROM customer_segments GROUP BY country ORDER BY revenue DESC LIMIT 50",
+          "resultShape": {
+            "columns": [
+              "country",
+              "customers",
+              "orders",
+              "revenue",
+              "avg_order_value"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Revenue by country",
+          "caption": "The UK, Australia and India lead, each within $20K of one another."
+        }
+      },
+      {
+        "id": "top-countries",
+        "slot": "summary",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT country AS country, ROUND(SUM(revenue),0) AS revenue FROM customer_segments GROUP BY country ORDER BY revenue DESC LIMIT 10",
+          "resultShape": {
+            "label": "country",
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Top countries",
+          "caption": "Revenue is well-balanced across markets — no single country dominates."
+        }
+      },
+      {
+        "id": "segment-split",
+        "slot": "summary",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT segment AS segment, ROUND(SUM(revenue),0) AS revenue FROM customer_segments GROUP BY segment ORDER BY revenue DESC",
+          "resultShape": {
+            "label": "segment",
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Revenue by segment",
+          "caption": "Pro accounts contribute the largest slice of worldwide revenue."
+        }
+      }
+    ]
+  }
+}

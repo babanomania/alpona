@@ -6,8 +6,8 @@
     "title": "Procurement spend",
     "layout": "chart-grid@1",
     "params": {
-      "start_date": "2025-06-01",
-      "end_date": "2026-06-14"
+      "start_date": "2000-01-01",
+      "end_date": "2100-01-01"
     },
     "widgets": [
       {

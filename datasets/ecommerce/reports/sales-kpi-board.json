@@ -1,0 +1,124 @@
+{
+  "name": "Sales scorecard",
+  "prompt": "Sales scorecard: top-line revenue, orders, average order value, units, customers and catalog size, with the weekly revenue trend.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Sales scorecard",
+    "layout": "kpi-overview@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "kpi-revenue",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(revenue),0) AS revenue FROM revenue_trends",
+          "resultShape": {
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Total revenue",
+          "caption": "$3.6M over 53 weeks."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-orders",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(orders) AS orders FROM revenue_trends",
+          "resultShape": {
+            "value": "orders"
+          }
+        },
+        "copy": {
+          "title": "Orders",
+          "caption": "5,102 orders placed."
+        }
+      },
+      {
+        "id": "kpi-aov",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(revenue)/NULLIF(SUM(orders),0),2) AS aov FROM revenue_trends",
+          "resultShape": {
+            "value": "aov"
+          }
+        },
+        "copy": {
+          "title": "Avg order value",
+          "caption": "About $705 per order."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-units",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(units) AS units FROM revenue_trends",
+          "resultShape": {
+            "value": "units"
+          }
+        },
+        "copy": {
+          "title": "Units sold",
+          "caption": "27,642 units shipped."
+        }
+      },
+      {
+        "id": "kpi-customers",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(customers) AS customers FROM customer_segments",
+          "resultShape": {
+            "value": "customers"
+          }
+        },
+        "copy": {
+          "title": "Customers",
+          "caption": "500 active customers."
+        }
+      },
+      {
+        "id": "kpi-products",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(*) AS products FROM product_performance",
+          "resultShape": {
+            "value": "products"
+          }
+        },
+        "copy": {
+          "title": "Products",
+          "caption": "80 products in the catalog."
+        }
+      },
+      {
+        "id": "weekly-trend",
+        "slot": "trend",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT week AS week, ROUND(SUM(revenue),0) AS revenue FROM revenue_trends GROUP BY week ORDER BY week",
+          "resultShape": {
+            "x": "week",
+            "y": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Weekly revenue trend",
+          "caption": "Revenue holds steady week to week with mild seasonal swings."
+        }
+      }
+    ]
+  }
+}

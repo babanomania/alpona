@@ -1,0 +1,127 @@
+{
+  "name": "Retention scorecard",
+  "prompt": "Retention scorecard: MRR, accounts, seats, average MRR, churned accounts and churn rate, with weekly active accounts.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Retention scorecard",
+    "layout": "kpi-overview@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "kpi-mrr",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(mrr),0) AS mrr FROM churn_risk",
+          "resultShape": {
+            "value": "mrr"
+          }
+        },
+        "copy": {
+          "title": "Total MRR",
+          "caption": "$735K in recurring revenue."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-accounts",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(*) AS accounts FROM churn_risk",
+          "resultShape": {
+            "value": "accounts"
+          }
+        },
+        "copy": {
+          "title": "Accounts",
+          "caption": "600 accounts."
+        }
+      },
+      {
+        "id": "kpi-avg",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(SUM(mrr)/NULLIF(COUNT(*),0),0) AS avg_mrr FROM churn_risk",
+          "resultShape": {
+            "value": "avg_mrr"
+          }
+        },
+        "copy": {
+          "title": "Avg MRR",
+          "caption": "~$1,225 per account."
+        },
+        "props": {
+          "format": "currency"
+        }
+      },
+      {
+        "id": "kpi-seats",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(seats) AS seats FROM churn_risk",
+          "resultShape": {
+            "value": "seats"
+          }
+        },
+        "copy": {
+          "title": "Seats",
+          "caption": "62,700 seats."
+        }
+      },
+      {
+        "id": "kpi-churned",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(CASE WHEN churned THEN 1 ELSE 0 END) AS churned FROM churn_risk",
+          "resultShape": {
+            "value": "churned"
+          }
+        },
+        "copy": {
+          "title": "Churned accounts",
+          "caption": "85 accounts have churned."
+        }
+      },
+      {
+        "id": "kpi-churn-rate",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(100.0*SUM(CASE WHEN churned THEN 1 ELSE 0 END)/NULLIF(COUNT(*),0),1) AS churn_rate FROM churn_risk",
+          "resultShape": {
+            "value": "churn_rate"
+          }
+        },
+        "copy": {
+          "title": "Churn rate",
+          "caption": "14.2% of accounts have churned."
+        },
+        "props": {
+          "format": "percent"
+        }
+      },
+      {
+        "id": "weekly-active",
+        "slot": "trend",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT week AS week, SUM(active_accounts) AS active FROM feature_adoption GROUP BY week ORDER BY week",
+          "resultShape": {
+            "x": "week",
+            "y": "active"
+          }
+        },
+        "copy": {
+          "title": "Weekly active accounts",
+          "caption": "Weekly active accounts hold steady across the year with no sustained decline."
+        }
+      }
+    ]
+  }
+}

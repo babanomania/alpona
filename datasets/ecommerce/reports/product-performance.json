@@ -1,0 +1,98 @@
+{
+  "name": "Product performance",
+  "prompt": "Product performance: revenue by category, the best-selling products, unit and margin breakdowns, and a product detail table.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Product performance",
+    "layout": "deep-dive@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "rev-by-category",
+        "slot": "hero",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT category AS category, ROUND(SUM(revenue),0) AS revenue FROM product_performance GROUP BY category ORDER BY revenue DESC",
+          "resultShape": {
+            "x": "category",
+            "y": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Revenue by category",
+          "caption": "Home and Sports each clear $740K; the six categories stay within a tight band."
+        }
+      },
+      {
+        "id": "top-products",
+        "slot": "breakdowns",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT product AS product, ROUND(revenue,0) AS revenue FROM product_performance ORDER BY revenue DESC LIMIT 10",
+          "resultShape": {
+            "label": "product",
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Best-selling products",
+          "caption": "The top ten products are clustered closely on revenue — no single runaway hit."
+        }
+      },
+      {
+        "id": "units-by-category",
+        "slot": "breakdowns",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT category AS category, SUM(units_sold) AS units FROM product_performance GROUP BY category ORDER BY units DESC",
+          "resultShape": {
+            "label": "category",
+            "value": "units"
+          }
+        },
+        "copy": {
+          "title": "Units by category",
+          "caption": "Unit volume is spread evenly across categories, mirroring revenue."
+        }
+      },
+      {
+        "id": "margin-by-category",
+        "slot": "breakdowns",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT category AS category, ROUND(SUM(margin),0) AS margin FROM product_performance GROUP BY category ORDER BY margin DESC",
+          "resultShape": {
+            "x": "category",
+            "y": "margin"
+          }
+        },
+        "copy": {
+          "title": "Margin by category",
+          "caption": "Home contributes the most gross margin; Toys and Beauty the least."
+        }
+      },
+      {
+        "id": "product-detail",
+        "slot": "detail",
+        "type": "table",
+        "binding": {
+          "sql": "SELECT product AS product, category AS category, ROUND(price,2) AS price, units_sold AS units_sold, ROUND(revenue,0) AS revenue, ROUND(margin,0) AS margin FROM product_performance ORDER BY revenue DESC LIMIT 50",
+          "resultShape": {
+            "columns": [
+              "product",
+              "category",
+              "price",
+              "units_sold",
+              "revenue",
+              "margin"
+            ]
+          }
+        },
+        "copy": {
+          "title": "Product detail",
+          "caption": "Every product with its price, units sold, revenue and gross margin."
+        }
+      }
+    ]
+  }
+}

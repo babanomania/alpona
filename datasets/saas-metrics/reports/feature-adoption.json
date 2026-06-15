@@ -1,0 +1,106 @@
+{
+  "name": "Feature adoption",
+  "prompt": "Feature adoption: weekly events by feature and by region over the year, with adoption KPIs.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Feature adoption",
+    "layout": "trend-wall@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "kpi-events",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT SUM(events) AS events FROM feature_adoption",
+          "resultShape": {
+            "value": "events"
+          }
+        },
+        "copy": {
+          "title": "Total events",
+          "caption": "4.5M feature events logged over the year."
+        }
+      },
+      {
+        "id": "kpi-active",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT ROUND(AVG(active_accounts),0) AS avg_active FROM feature_adoption",
+          "resultShape": {
+            "value": "avg_active"
+          }
+        },
+        "copy": {
+          "title": "Avg weekly active",
+          "caption": "About 30 accounts active per feature each week."
+        }
+      },
+      {
+        "id": "kpi-features",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(DISTINCT feature) AS features FROM feature_adoption",
+          "resultShape": {
+            "value": "features"
+          }
+        },
+        "copy": {
+          "title": "Features tracked",
+          "caption": "5 product features instrumented."
+        }
+      },
+      {
+        "id": "kpi-regions",
+        "slot": "kpis",
+        "type": "kpi_card",
+        "binding": {
+          "sql": "SELECT COUNT(DISTINCT region) AS regions FROM feature_adoption",
+          "resultShape": {
+            "value": "regions"
+          }
+        },
+        "copy": {
+          "title": "Regions",
+          "caption": "Adoption measured across 4 regions."
+        }
+      },
+      {
+        "id": "events-by-feature",
+        "slot": "trends",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT week AS week, feature AS feature, SUM(events) AS events FROM feature_adoption GROUP BY week, feature ORDER BY week, feature",
+          "resultShape": {
+            "x": "week",
+            "y": "events",
+            "series": "feature"
+          }
+        },
+        "copy": {
+          "title": "Weekly events by feature",
+          "caption": "All five features see steady weekly usage, led narrowly by the API."
+        }
+      },
+      {
+        "id": "events-by-region",
+        "slot": "trends",
+        "type": "line_chart",
+        "binding": {
+          "sql": "SELECT week AS week, region AS region, SUM(events) AS events FROM feature_adoption GROUP BY week, region ORDER BY week, region",
+          "resultShape": {
+            "x": "week",
+            "y": "events",
+            "series": "region"
+          }
+        },
+        "copy": {
+          "title": "Weekly events by region",
+          "caption": "Regional usage moves together — no single market is breaking away."
+        }
+      }
+    ]
+  }
+}

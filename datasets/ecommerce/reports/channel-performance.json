@@ -1,0 +1,77 @@
+{
+  "name": "Channel performance",
+  "prompt": "Channel performance: weekly revenue trend by channel, order share and revenue by channel, and units per channel.",
+  "spec": {
+    "specVersion": 1,
+    "title": "Channel performance",
+    "layout": "two-tier@1",
+    "params": {},
+    "widgets": [
+      {
+        "id": "weekly-by-channel",
+        "slot": "hero",
+        "type": "area_chart",
+        "binding": {
+          "sql": "SELECT week AS week, channel AS channel, ROUND(SUM(revenue),0) AS revenue FROM revenue_trends GROUP BY week, channel ORDER BY week, channel",
+          "resultShape": {
+            "x": "week",
+            "y": "revenue",
+            "series": "channel"
+          }
+        },
+        "copy": {
+          "title": "Weekly revenue by channel",
+          "caption": "Channel mix is stable week to week — web and retail consistently out-earn marketplace and mobile."
+        }
+      },
+      {
+        "id": "orders-share",
+        "slot": "side",
+        "type": "donut_chart",
+        "binding": {
+          "sql": "SELECT channel AS channel, SUM(orders) AS orders FROM revenue_trends GROUP BY channel ORDER BY orders DESC",
+          "resultShape": {
+            "label": "channel",
+            "value": "orders"
+          }
+        },
+        "copy": {
+          "title": "Order share by channel",
+          "caption": "Orders split almost evenly across channels; revenue does not."
+        }
+      },
+      {
+        "id": "rev-leaderboard",
+        "slot": "side",
+        "type": "leaderboard",
+        "binding": {
+          "sql": "SELECT channel AS channel, ROUND(SUM(revenue),0) AS revenue FROM revenue_trends GROUP BY channel ORDER BY revenue DESC",
+          "resultShape": {
+            "label": "channel",
+            "value": "revenue"
+          }
+        },
+        "copy": {
+          "title": "Revenue by channel",
+          "caption": "Web earns 4x mobile on a similar order count — higher basket sizes online."
+        }
+      },
+      {
+        "id": "units-by-channel",
+        "slot": "secondary",
+        "type": "bar_chart",
+        "binding": {
+          "sql": "SELECT channel AS channel, SUM(units) AS units FROM revenue_trends GROUP BY channel ORDER BY units DESC",
+          "resultShape": {
+            "x": "channel",
+            "y": "units"
+          }
+        },
+        "copy": {
+          "title": "Units by channel",
+          "caption": "Web also moves the most units, reinforcing it as the primary channel."
+        }
+      }
+    ]
+  }
+}

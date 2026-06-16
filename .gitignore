@@ -47,3 +47,6 @@ videos/test-results/
 website/dist/
 website/.astro/
 website/src/content/docs/reference/
+
+.claude/
+.agents/
